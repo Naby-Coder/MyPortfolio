@@ -1,9 +1,12 @@
 -- ========================================================
--- MYFOLIO SUPABASE SEED DATA (DML)
--- Pre-populating Portfolio Database for Mouhamed Ndione
+-- MYFOLIO SUPABASE SEED & BACKUP DATA
+-- Full Stable Snapshot for Mouhamed Ndione Portfolio
 -- ========================================================
 
--- 1. Insert Categories
+-- 0. Security Policy for Contact Messages
+ALTER TABLE IF EXISTS public.contact_messages DISABLE ROW LEVEL SECURITY;
+
+-- 1. Categories
 INSERT INTO public.categories (id, name_fr, name_en, slug) VALUES
 (1, 'Développement Web & SaaS', 'Web Development & SaaS', 'web'),
 (2, 'Applications Mobiles', 'Mobile Applications', 'mobile'),
@@ -11,78 +14,32 @@ INSERT INTO public.categories (id, name_fr, name_en, slug) VALUES
 (4, 'Architecture Full-Stack', 'Full-Stack Architecture', 'fullstack')
 ON CONFLICT (id) DO NOTHING;
 
--- 2. Insert Skills (Technical Ecosystem - 54 Skills)
-INSERT INTO public.skills (id, name, category, level_percentage, proficiency_label) VALUES
--- Languages & OOP
-(1, 'Java', 'Languages & OOP', 90, 'Advanced'),
-(2, 'Python', 'Languages & OOP', 88, 'Advanced'),
-(3, 'C', 'Languages & OOP', 82, 'Intermediate'),
-(4, 'PHP', 'Languages & OOP', 92, 'Expert'),
-(5, 'JavaScript', 'Languages & OOP', 95, 'Expert'),
-(6, 'TypeScript', 'Languages & OOP', 92, 'Expert'),
-(7, 'Dart', 'Languages & OOP', 85, 'Advanced'),
-(8, 'Kotlin', 'Languages & OOP', 84, 'Advanced'),
-(9, 'XML', 'Languages & OOP', 90, 'Advanced'),
-(10, 'JSON', 'Languages & OOP', 98, 'Expert'),
+-- 2. Projects (Your 4 Real Projects)
+INSERT INTO public.projects (id, slug, title_fr, title_en, summary_fr, summary_en, featured_image, demo_url, github_url, is_featured, status) VALUES
+(1, 'saas-financial-management', 'Gestion Financière SaaS', 'SaaS Financial Management', 'Application de gestion financière entreprise offrant la visualisation de données complexes en temps réel, le suivi analytique et l’automatisation des rapports.', 'Enterprise financial management platform delivering real-time complex data visualization, analytics tracking, and automated reporting.', '/projects/mesfinances-responsive.jpg', 'https://demo.financial.myfolio.com', 'https://github.com/Naby-Coder/saas-financial', true, 'LIVE'),
+(2, 'drop-carpooling', 'Drop - Application de covoiturage', 'Drop - Carpooling Mobile App', 'Application mobile de covoiturage urbain pensée pour l’Afrique de l’Ouest avec calcul d’itinéraires optimisé, géolocalisation et messagerie instantanée.', 'Urban carpooling mobile application designed for West Africa featuring real-time geolocation, route optimization, and instant messaging.', 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786726578232-ebyame9.png', 'https://demo.drop.myfolio.com', 'https://github.com/Naby-Coder/drop-carpooling', false, 'LIVE'),
+(14, 'association-senegalais-moncton', 'Association des Sénégalais de Moncton', 'Association of Senegalese of Moncton', 'Identité visuelle complète, charte graphique et plateforme web pour l’Association des Sénégalais de Moncton.', 'Complete visual identity, brand guidelines, and web platform for the Association of Senegalese of Moncton.', 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786727429306-o7wwwij.jpeg', '', '', false, 'LIVE'),
+(16, 'boucher-et-associes', 'Boucher et Associés Avocats', 'Boucher et Associés Law Firm', 'Plateforme web institutionnelle moderne et espace client sécurisé pour un cabinet d’avocats d’affaires et de conseil juridique d’excellence.', 'Modern corporate web platform and secure client portal for a premier corporate law and legal advisory firm.', 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786727928090-lsspxzp.webp', 'https://demo.boucher-avocats.myfolio.com', 'https://github.com/Naby-Coder/boucher-associes', false, 'LIVE')
+ON CONFLICT (id) DO UPDATE SET
+  title_fr = EXCLUDED.title_fr,
+  title_en = EXCLUDED.title_en,
+  summary_fr = EXCLUDED.summary_fr,
+  summary_en = EXCLUDED.summary_en,
+  featured_image = EXCLUDED.featured_image,
+  is_featured = EXCLUDED.is_featured,
+  status = EXCLUDED.status;
 
--- Front-end & Web Solutions (CMS)
-(11, 'Next.js', 'Front-end & Web Solutions (CMS)', 95, 'Expert'),
-(12, 'React', 'Front-end & Web Solutions (CMS)', 95, 'Expert'),
-(13, 'Angular', 'Front-end & Web Solutions (CMS)', 84, 'Advanced'),
-(14, 'Vue.js', 'Front-end & Web Solutions (CMS)', 82, 'Advanced'),
-(15, 'HTML5', 'Front-end & Web Solutions (CMS)', 98, 'Expert'),
-(16, 'CSS3', 'Front-end & Web Solutions (CMS)', 95, 'Expert'),
-(17, 'Tailwind CSS', 'Front-end & Web Solutions (CMS)', 96, 'Expert'),
-(18, 'WordPress', 'Front-end & Web Solutions (CMS)', 90, 'Advanced'),
-(19, 'Moodle', 'Front-end & Web Solutions (CMS)', 85, 'Advanced'),
-(20, 'Drupal', 'Front-end & Web Solutions (CMS)', 80, 'Intermediate'),
-(21, 'Joomla', 'Front-end & Web Solutions (CMS)', 78, 'Intermediate'),
-(22, 'Shopify', 'Front-end & Web Solutions (CMS)', 88, 'Advanced'),
-
--- Back-end & Databases
-(23, 'Laravel', 'Back-end & Databases', 94, 'Expert'),
-(24, 'Spring Boot', 'Back-end & Databases', 88, 'Advanced'),
-(25, 'Node.js', 'Back-end & Databases', 90, 'Advanced'),
-(26, 'Django', 'Back-end & Databases', 82, 'Advanced'),
-(27, 'Supabase', 'Back-end & Databases', 92, 'Expert'),
-(28, 'MySQL', 'Back-end & Databases', 92, 'Expert'),
-(29, 'PostgreSQL', 'Back-end & Databases', 90, 'Expert'),
-(30, 'Oracle', 'Back-end & Databases', 80, 'Intermediate'),
-(31, 'SQLite', 'Back-end & Databases', 88, 'Advanced'),
-
--- Mobile Apps
-(32, 'Flutter', 'Mobile Apps', 90, 'Advanced'),
-(33, 'React Native', 'Mobile Apps', 88, 'Advanced'),
-(34, 'Ionic', 'Mobile Apps', 82, 'Intermediate'),
-(35, 'Android Studio', 'Mobile Apps', 85, 'Advanced'),
-
--- Design & Visual Identity
-(36, 'Figma', 'Design & Visual Identity', 96, 'Expert'),
-(37, 'Photoshop', 'Design & Visual Identity', 92, 'Expert'),
-(38, 'Illustrator', 'Design & Visual Identity', 90, 'Advanced'),
-(39, 'UI/UX Design', 'Design & Visual Identity', 94, 'Expert'),
-(40, 'Logos', 'Design & Visual Identity', 92, 'Expert'),
-(41, 'Affiches', 'Design & Visual Identity', 90, 'Advanced'),
-(42, 'Chartes Graphiques', 'Design & Visual Identity', 94, 'Expert'),
-
--- CI/CD, DevOps & Methodologies
-(43, 'Docker', 'CI/CD, DevOps & Methodologies', 86, 'Advanced'),
-(44, 'GitHub', 'CI/CD, DevOps & Methodologies', 95, 'Expert'),
-(45, 'GitLab', 'CI/CD, DevOps & Methodologies', 90, 'Advanced'),
-(46, 'Jira', 'CI/CD, DevOps & Methodologies', 88, 'Advanced'),
-(47, 'Trello', 'CI/CD, DevOps & Methodologies', 92, 'Advanced'),
-(48, 'Yoast SEO', 'CI/CD, DevOps & Methodologies', 88, 'Advanced'),
-(49, 'Google Analytics', 'CI/CD, DevOps & Methodologies', 85, 'Advanced'),
-(50, 'Linux', 'CI/CD, DevOps & Methodologies', 88, 'Advanced'),
-(51, 'Windows', 'CI/CD, DevOps & Methodologies', 95, 'Expert'),
-(52, 'MacOS', 'CI/CD, DevOps & Methodologies', 90, 'Advanced'),
-(53, 'UML', 'CI/CD, DevOps & Methodologies', 88, 'Advanced'),
-(54, 'MERISE', 'CI/CD, DevOps & Methodologies', 85, 'Advanced')
+-- 3. Experiences
+INSERT INTO public.experiences (id, position_fr, position_en, company, location, start_date) VALUES
+(1, 'Développeur Web & Mobile · Designer Graphique (Freelance)', 'Web & Mobile Developer · Graphic Designer (Freelance)', 'Kossy Tech Solutions · Télétravail / Remote', 'Janvier 2023 — Présent', '2023-01-01'),
+(2, 'Stagiaire en Administration de Sites Web', 'Web Administration Intern', 'Université Numérique Cheikh Hamidou Kane – ANDS · Sénégal', 'Octobre 2024 — Juin 2025', '2024-10-01'),
+(3, 'Participant — Hackathon Cezat & Sonatel', 'Participant — Cezat & Sonatel Hackathon', 'Tivaouane, Sénégal', 'Septembre 2023 & Septembre 2024', '2023-09-01')
 ON CONFLICT (id) DO NOTHING;
 
--- 3. Insert Projects
-INSERT INTO public.projects (id, slug, title_fr, title_en, summary_fr, summary_en, featured_image, demo_url, github_url, category_id, is_featured, status) VALUES
-(1, 'saas-financial-management', 'SaaS Financial Management', 'SaaS Financial Management', 'Plateforme de gestion financière d’entreprise offrant la visualisation analytique en temps réel et la gestion comptable.', 'Enterprise financial management platform delivering real-time complex data visualization, analytics tracking, and automated reporting.', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', 'https://demo.financial.myfolio.com', 'https://github.com/mouhamedndione/saas-financial', 1, true, 'completed'),
-(2, 'drop-carpooling', 'Drop - Carpooling Platform', 'Drop - Carpooling Platform', 'Application de covoiturage urbain intelligente avec géolocalisation et calcul d’itinéraires optimisés.', 'Smart urban carpooling application with real-time geolocation and route optimization.', 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80', 'https://demo.drop.myfolio.com', 'https://github.com/mouhamedndione/drop-carpooling', 2, true, 'completed'),
-(3, 'boucher-associes', 'Boucher & Associés - Cabinet d’Avocats', 'Boucher & Associates - Law Firm', 'Site institutionnel haut de gamme avec espace client sécurisé et prise de rendez-vous juridique en ligne.', 'High-end corporate law firm portal with secure client space and online legal consultation booking.', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', 'https://boucher-avocats.com', 'https://github.com/mouhamedndione/boucher-associes', 1, true, 'completed')
+-- 4. Education
+INSERT INTO public.education (id, degree_fr, degree_en, institution, location, is_current, start_date) VALUES
+(1, 'Master en Conception & Développement d’Applications Web, Full-Stack et Gaming', 'Master’s Degree in Web, Full-Stack & Gaming Application Design & Development', 'Université Numérique Cheikh Hamidou Kane (UNCHK) · Dakar, Sénégal', 'Août 2026 — En cours', true, '2026-08-01'),
+(2, 'Diplôme en Réseaux et Sécurité de l’Information', 'Diploma in Networking and Information Security', 'Collège communautaire du Nouveau-Brunswick (CCNB) – Campus de Dieppe · Dieppe, NB, Canada', 'Septembre 2025 — En cours', true, '2025-09-01'),
+(3, 'Licence en Développement d’Applications Web, Mobiles et Jeux Vidéo', 'Bachelor Degree in Web, Mobile and Gaming Application Development', 'Université Numérique Cheikh Hamidou Kane (UNCHK) · Dakar, Sénégal', 'Janvier 2021 — Juillet 2025', false, '2021-01-01'),
+(4, 'Baccalauréat en Sciences Sociales et Humaines', 'High School Diploma in Social and Human Sciences', 'Cheikh Anta Diop Académie · Thiès, Sénégal', 'Octobre 2018 — Juillet 2021', false, '2018-10-01')
 ON CONFLICT (id) DO NOTHING;
