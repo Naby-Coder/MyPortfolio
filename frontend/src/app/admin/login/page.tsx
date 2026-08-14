@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
   const { locale, toggleLocale } = useLanguage();
   const t = translations[locale];
 
-  const [email, setEmail] = useState('mouhamedndione151@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
 
       if (res.ok && data.success) {
         localStorage.setItem('admin_token', data.token || 'mouhamed_ndione_auth_token_2026');
-        localStorage.setItem('admin_user_email', 'mouhamedndione151@gmail.com');
+        localStorage.setItem('admin_user_email', inputEmail);
         sessionStorage.setItem('admin_authenticated', 'true');
         router.push('/admin/dashboard');
       } else {
@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
           <Input
             label={t.labelEmail}
             type="email"
-            placeholder="mouhamedndione151@gmail.com"
+            placeholder="nom@exemple.com"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
