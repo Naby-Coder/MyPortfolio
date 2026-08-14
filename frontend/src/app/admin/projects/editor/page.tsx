@@ -242,6 +242,7 @@ function ProjectEditorInner() {
   const [technologies, setTechnologies] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -269,6 +270,7 @@ function ProjectEditorInner() {
       setTimelineEn('');
       setStatusTextFr('Produit en Ligne');
       setStatusTextEn('Live Product');
+      setIsFeatured(false);
       setArchClientTitle('');
       setArchClientSub('');
       setArchBackendTitle('');
@@ -408,6 +410,8 @@ function ProjectEditorInner() {
         setStatusTextFr(current.status_text_fr || baseProject?.statusFr || 'Produit en Ligne');
         setStatusTextEn(current.status_text_en || baseProject?.statusEn || 'Live Product');
 
+        setIsFeatured(Boolean(current.is_featured || current.isFeatured));
+
         if (Array.isArray(current.features_fr)) {
           setFeaturesFr(current.features_fr.join('\n'));
         } else if (typeof current.features_fr === 'string') {
@@ -521,6 +525,7 @@ function ProjectEditorInner() {
       github_url: githubUrl,
       technologies: technologies.split(',').map((tech) => tech.trim()).filter(Boolean),
       status: targetStatus,
+      is_featured: isFeatured,
       category: category || 'Web / SaaS',
       timeline_fr: timelineFr || 'Sprint 4 Mois',
       timeline_en: timelineEn || '4 Months Sprint',
@@ -698,43 +703,61 @@ function ProjectEditorInner() {
             </h1>
           </div>
 
-          {/* Quick Status Toggle */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-slate-500 dark:text-zinc-400 hidden sm:inline">{t.statusLabel}</span>
-            <div className="flex items-center bg-white dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setProjectStatus('LIVE')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                  projectStatus === 'LIVE'
-                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                LIVE
-              </button>
-              <button
-                type="button"
-                onClick={() => setProjectStatus('DRAFT')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                  projectStatus === 'DRAFT'
-                    ? 'bg-amber-500 text-white font-bold shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                DRAFT
-              </button>
-              <button
-                type="button"
-                onClick={() => setProjectStatus('PRIVATE')}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                  projectStatus === 'PRIVATE'
-                    ? 'bg-purple-600 text-white font-bold shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                PRIVÉ
-              </button>
+          {/* Quick Status Toggle & Homepage Featured Toggle */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setIsFeatured(!isFeatured);
+                setSaveStatus(t.unsaved);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 border ${
+                isFeatured
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-md'
+                  : 'bg-white dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-white/10 hover:text-amber-500 dark:hover:text-amber-400'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${isFeatured ? 'fill-slate-950 text-slate-950' : 'text-amber-500'}`} />
+              <span>{isFeatured ? (locale === 'fr' ? '⭐ Projet Vedette (Accueil)' : '⭐ Featured on Home') : (locale === 'fr' ? 'Mettre à l’accueil' : 'Set on Home')}</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-slate-500 dark:text-zinc-400 hidden sm:inline">{t.statusLabel}</span>
+              <div className="flex items-center bg-white dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setProjectStatus('LIVE')}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    projectStatus === 'LIVE'
+                      ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  LIVE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectStatus('DRAFT')}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    projectStatus === 'DRAFT'
+                      ? 'bg-amber-500 text-white font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  DRAFT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectStatus('PRIVATE')}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    projectStatus === 'PRIVATE'
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  PRIVÉ
+                </button>
+              </div>
             </div>
           </div>
         </div>

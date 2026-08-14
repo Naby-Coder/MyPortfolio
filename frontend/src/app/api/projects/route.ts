@@ -40,8 +40,11 @@ export async function GET() {
             roleEn: p.role_en || base?.roleEn || 'Full-Stack Developer',
             timelineFr: p.timeline_fr || base?.timelineFr || 'En continu',
             timelineEn: p.timeline_en || base?.timelineEn || 'Ongoing',
+            status: p.status || 'LIVE',
             statusFr: p.status_text_fr || (p.status === 'DRAFT' ? 'En Développement' : 'Produit en Ligne') || base?.statusFr || 'Produit en Ligne',
             statusEn: p.status_text_en || (p.status === 'DRAFT' ? 'In Development' : 'Live Product') || base?.statusEn || 'Live Product',
+            is_featured: Boolean(p.is_featured),
+            isFeatured: Boolean(p.is_featured),
             tech: techList,
             image: p.featured_image || base?.image || (gallery[0] || ''),
             gallery: gallery,
@@ -106,6 +109,10 @@ export async function POST(req: NextRequest) {
     const finalSlug = project.slug || (project.title_fr || project.titleFr || project.title || 'projet').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `projet-${Date.now()}`;
 
     if (isSupabaseConfigured()) {
+      if (project.is_featured) {
+        await supabase.from('projects').update({ is_featured: false }).neq('slug', finalSlug);
+      }
+
       const payload: any = {
         slug: finalSlug,
         title_fr: project.title_fr || project.titleFr || project.title || 'Nouveau Projet',
@@ -123,6 +130,7 @@ export async function POST(req: NextRequest) {
         role_fr: project.role_fr || project.roleFr || '',
         role_en: project.role_en || project.roleEn || '',
         status: project.status || 'LIVE',
+        is_featured: Boolean(project.is_featured),
         updated_at: new Date().toISOString(),
       };
 
@@ -143,6 +151,42 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error updating projects API:', error);
     return NextResponse.json({ success: false, message: error?.message || 'Erreur de synchronisation cloud.' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { slug, id, is_featured } = body;
+
+    if (isSupabaseConfigured()) {
+      if (is_featured) {
+        // Reset all other projects featured state
+        await supabase.from('projects').update({ is_featured: false }).neq('slug', slug || '');
+      }
+
+      let query = supabase.from('projects').update({
+        is_featured: Boolean(is_featured),
+        updated_at: new Date().toISOString(),
+      });
+
+      if (slug) {
+        query = query.eq('slug', slug);
+      } else if (id) {
+        query = query.eq('id', Number(id));
+      }
+
+      const { error } = await query;
+      if (error) {
+        console.error('Supabase patch project error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'Projet vedette mis à jour avec succès !' });
+  } catch (error: any) {
+    console.error('Error in PATCH /api/projects:', error);
+    return NextResponse.json({ success: false, message: error?.message || 'Erreur lors de la mise à jour' }, { status: 500 });
   }
 }
 
