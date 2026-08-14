@@ -65,17 +65,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function loadProjects() {
-      try {
-        const res = await fetch('/api/projects');
-        const json = await res.json();
-        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
-          setProjectList(json.data);
-          return;
-        }
-      } catch (e) {
-        console.warn('Using local/default projects:', e);
-      }
-
+      // 1. Immediate local storage check for instant UI update on same browser
       try {
         const stored = localStorage.getItem('myfolio_projects');
         if (stored) {
@@ -104,7 +94,18 @@ export default function ProjectsPage() {
           }
         }
       } catch (e) {
-        console.error('Error loading projects:', e);
+        console.error('Error loading local projects:', e);
+      }
+
+      // 2. Fetch fresh cloud data with no cache
+      try {
+        const res = await fetch('/api/projects', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setProjectList(json.data);
+        }
+      } catch (e) {
+        console.warn('Cloud fetch notice:', e);
       }
     }
 
