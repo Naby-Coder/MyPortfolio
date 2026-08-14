@@ -7,6 +7,31 @@ export const revalidate = 0;
 
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80';
 
+function inferCategory(article: any) {
+  const staticFound = blogArticles.find((b) => b.slug === article.slug);
+  if (staticFound) {
+    return {
+      fr: staticFound.categoryFr,
+      en: staticFound.categoryEn,
+    };
+  }
+
+  const text = `${article.title_fr || ''} ${article.title_en || ''} ${article.excerpt_fr || ''} ${article.slug || ''}`.toLowerCase();
+  if (text.includes('sécurité') || text.includes('security') || text.includes('réseau') || text.includes('network') || text.includes('firewall') || text.includes('zero-trust')) {
+    return { fr: 'Sécurité & Réseaux', en: 'Security & Networks' };
+  }
+  if (text.includes('flutter') || text.includes('mobile') || text.includes('ios') || text.includes('android')) {
+    return { fr: 'Mobile & Flutter', en: 'Mobile & Flutter' };
+  }
+  if (text.includes('design') || text.includes('figma') || text.includes('ui/ux') || text.includes('ux') || text.includes('ui')) {
+    return { fr: 'Design UI/UX', en: 'UI/UX Design' };
+  }
+  if (text.includes('wordpress') || text.includes('cms') || text.includes('headless')) {
+    return { fr: 'CMS & WordPress', en: 'CMS & WordPress' };
+  }
+  return { fr: 'Développement Full-Stack', en: 'Full-Stack Development' };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -30,7 +55,16 @@ export async function GET(req: NextRequest) {
       const { data, error } = await query;
 
       if (!error && data !== null && data.length > 0) {
-        return NextResponse.json({ success: true, data });
+        const mapped = data.map((a: any) => {
+          const cats = inferCategory(a);
+          return {
+            ...a,
+            category_fr: cats.fr,
+            category_en: cats.en,
+            category: cats.fr,
+          };
+        });
+        return NextResponse.json({ success: true, data: mapped });
       }
     }
 
@@ -49,6 +83,8 @@ export async function GET(req: NextRequest) {
         title_fr: b.titleFr,
         title_en: b.titleEn,
         category: b.categoryFr,
+        category_fr: b.categoryFr,
+        category_en: b.categoryEn,
         excerpt_fr: b.excerptFr,
         excerpt_en: b.excerptEn,
         content_fr: frMarkdown,
@@ -83,7 +119,6 @@ export async function POST(req: NextRequest) {
     const finalSlug = rawSlug.substring(0, 240);
 
     let coverImage = article.cover_image || article.image || DEFAULT_COVER;
-    // Ensure cover_image does not exceed PostgreSQL VARCHAR(500) limit
     if (coverImage && coverImage.length > 490) {
       coverImage = DEFAULT_COVER;
     }
