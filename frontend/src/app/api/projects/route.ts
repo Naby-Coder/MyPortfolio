@@ -87,3 +87,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: 'Erreur de synchronisation cloud.' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const slug = searchParams.get('slug');
+    const id = searchParams.get('id');
+
+    if (isSupabaseConfigured()) {
+      if (slug) {
+        const { error } = await supabase.from('projects').delete().eq('slug', slug);
+        if (error) console.warn('Supabase delete by slug notice:', error);
+      }
+      if (id && !isNaN(Number(id))) {
+        const { error } = await supabase.from('projects').delete().eq('id', Number(id));
+        if (error) console.warn('Supabase delete by id notice:', error);
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'Projet supprimé avec succès du cloud !' });
+  } catch (error) {
+    console.error('Error deleting project API:', error);
+    return NextResponse.json({ success: false, message: 'Erreur lors de la suppression' }, { status: 500 });
+  }
+}
+

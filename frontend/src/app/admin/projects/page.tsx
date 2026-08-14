@@ -101,7 +101,30 @@ export default function ProjectManagerPage() {
   const [adminProjects, setAdminProjects] = useState(mockAdminProjects);
 
   React.useEffect(() => {
-    function loadAdminProjects() {
+    async function loadAdminProjects() {
+      // 1. Load from Cloud API first
+      try {
+        const res = await fetch('/api/projects', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          const mapped = json.data.map((p: any, idx: number) => ({
+            id: p.id || `NX-${4029 + idx}`,
+            slug: p.slug,
+            title: locale === 'fr' ? (p.titleFr || p.title_fr || p.title) : (p.titleEn || p.title_en || p.title),
+            titleEn: p.titleEn || p.title_en || p.title || '',
+            category: p.category || 'Web / SaaS',
+            status: p.status || 'LIVE',
+            updated: p.updated || new Date().toISOString().split('T')[0],
+            image: p.image || p.featured_image || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80',
+          }));
+          setAdminProjects(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not fetch cloud projects:', err);
+      }
+
+      // 2. Fallback to localStorage
       try {
         const stored = localStorage.getItem('myfolio_projects');
         if (stored) {
@@ -117,8 +140,7 @@ export default function ProjectManagerPage() {
               updated: p.updated || new Date().toISOString().split('T')[0],
               image: p.featured_image || p.image || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80',
             }));
-            const merged = [...formatted, ...mockAdminProjects.filter((m) => !formatted.some((f) => f.slug === m.slug || f.title === m.title))];
-            setAdminProjects(merged);
+            setAdminProjects(formatted);
           }
         }
       } catch (e) {
@@ -131,10 +153,15 @@ export default function ProjectManagerPage() {
     return () => window.removeEventListener('myfolio_projects_updated', loadAdminProjects);
   }, [locale]);
 
-  const handleDelete = (targetId: string | number, targetSlug?: string) => {
-    const updated = adminProjects.filter((p) => p.id !== targetId && p.slug !== targetSlug);
-    setAdminProjects(updated);
+  const handleDelete = async (targetId: string | number, targetSlug?: string) => {
+    if (!confirm(locale === 'fr' ? 'Êtes-vous sûr de vouloir supprimer définitivement ce projet ?' : 'Are you sure you want to permanently delete this project?')) {
+      return;
+    }
 
+    // 1. Immediately remove from local state
+    setAdminProjects((prev) => prev.filter((p) => p.id !== targetId && p.slug !== targetSlug));
+
+    // 2. Remove from localStorage
     try {
       const stored = localStorage.getItem('myfolio_projects');
       if (stored) {
@@ -144,7 +171,20 @@ export default function ProjectManagerPage() {
         window.dispatchEvent(new Event('myfolio_projects_updated'));
       }
     } catch (e) {
-      console.error('Error deleting project:', e);
+      console.error('Error deleting project from storage:', e);
+    }
+
+    // 3. Delete from Supabase Cloud
+    try {
+      const params = new URLSearchParams();
+      if (targetSlug) params.set('slug', targetSlug);
+      if (targetId) params.set('id', String(targetId));
+
+      await fetch(`/api/projects?${params.toString()}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Error deleting from cloud:', err);
     }
   };
 
