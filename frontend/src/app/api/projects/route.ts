@@ -24,22 +24,18 @@ export async function GET() {
             titleEn: p.title_en || base.titleEn,
             summaryFr: p.summary_fr || base.summaryFr,
             summaryEn: p.summary_en || base.summaryEn,
-            category: p.category_name || base.category,
+            category: p.category_name || p.category || base.category,
             categoryFilter: (p.category_filter as any) || base.categoryFilter,
+            status: p.status || 'LIVE',
             image: p.featured_image || base.image,
-            gallery: (Array.isArray(p.features_fr) && p.features_fr.length > 0) ? p.features_fr : base.gallery,
+            gallery: (Array.isArray(p.features_fr) && p.features_fr.length > 0) ? p.features_fr : (base.gallery || []),
             demoUrl: p.demo_url || base.demoUrl,
             githubUrl: p.github_url || base.githubUrl,
+            updated: p.updated_at ? p.updated_at.split('T')[0] : '2026-08-14',
           };
         });
 
-        // Merge with existing static data for missing projects
-        const fullList = [
-          ...mapped,
-          ...projectsData.filter((base) => !mapped.some((m) => m.slug === base.slug)),
-        ];
-
-        return NextResponse.json({ success: true, data: fullList });
+        return NextResponse.json({ success: true, data: mapped });
       }
     }
 
@@ -74,6 +70,8 @@ export async function POST(req: NextRequest) {
         solution_en: project.solution_en,
         role_fr: project.role_fr || project.roleFr,
         role_en: project.role_en || project.roleEn,
+        status: project.status || 'LIVE',
+        updated_at: new Date().toISOString(),
       }, { onConflict: 'slug' });
 
       if (error) {
@@ -111,4 +109,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: false, message: 'Erreur lors de la suppression' }, { status: 500 });
   }
 }
-

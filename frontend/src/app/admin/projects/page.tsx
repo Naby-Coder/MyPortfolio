@@ -168,7 +168,6 @@ export default function ProjectManagerPage() {
         const list = JSON.parse(stored);
         const filtered = list.filter((p: any) => p.id !== targetId && p.slug !== targetSlug);
         localStorage.setItem('myfolio_projects', JSON.stringify(filtered));
-        window.dispatchEvent(new Event('myfolio_projects_updated'));
       }
     } catch (e) {
       console.error('Error deleting project from storage:', e);
