@@ -1022,7 +1022,7 @@ export default function AboutPage() {
                 size="sm"
                 icon={<ShieldCheck className="w-4 h-4" />}
                 onClick={() => {
-                  const url = (selectedCert as any).credentialUrl || 'https://www.credly.com/';
+                  const url = (selectedCert as any).credentialUrl || (selectedCert as any).credential_url || 'https://unchk.edu.sn/';
                   window.open(url, '_blank', 'noopener,noreferrer');
                 }}
               >
