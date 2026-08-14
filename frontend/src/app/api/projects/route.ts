@@ -27,6 +27,7 @@ export async function GET() {
             category: p.category_name || base.category,
             categoryFilter: (p.category_filter as any) || base.categoryFilter,
             image: p.featured_image || base.image,
+            gallery: (Array.isArray(p.features_fr) && p.features_fr.length > 0) ? p.features_fr : base.gallery,
             demoUrl: p.demo_url || base.demoUrl,
             githubUrl: p.github_url || base.githubUrl,
           };
@@ -54,6 +55,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const project = body.project || body;
 
+    const galleryArray = project.gallery || (project.gallery_items ? project.gallery_items.map((g: any) => g.url) : [project.featured_image || project.image]);
+
     if (isSupabaseConfigured()) {
       const { error } = await supabase.from('projects').upsert({
         slug: project.slug,
@@ -62,6 +65,7 @@ export async function POST(req: NextRequest) {
         summary_fr: project.summary_fr || project.summaryFr || project.summary,
         summary_en: project.summary_en || project.summaryEn || project.summary,
         featured_image: project.featured_image || project.image,
+        features_fr: galleryArray,
         demo_url: project.demo_url || project.demoUrl,
         github_url: project.github_url || project.githubUrl,
         problem_fr: project.problem_fr,
