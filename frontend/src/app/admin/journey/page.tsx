@@ -417,10 +417,23 @@ export default function AdminJourneyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImage(file, 200, 200, 0.85);
-      setBadgeImage(compressed);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const json = await res.json();
+      if (json?.success && json?.url) {
+        setBadgeImage(json.url);
+      } else {
+        const compressed = await compressImage(file, 400, 400, 0.85);
+        setBadgeImage(compressed);
+      }
     } catch (err) {
-      console.error('Error compressing badge logo:', err);
+      console.error('Error uploading badge image:', err);
+      const compressed = await compressImage(file, 400, 400, 0.85);
+      setBadgeImage(compressed);
     }
   };
 

@@ -556,66 +556,40 @@ function ProjectEditorInner() {
     if (!files || files.length === 0) return;
 
     const newItems: MediaItem[] = [];
-    const maxDimension = 1200;
-    const quality = 0.75;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const isFirst = uploadedMedia.length === 0 && i === 0;
 
       try {
-        const compressedBase64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
+        let mediaUrl = '';
+        const formData = new FormData();
+        formData.append('file', file);
 
-              if (width > height) {
-                if (width > maxDimension) {
-                  height = Math.round((height * maxDimension) / width);
-                  width = maxDimension;
-                }
-              } else {
-                if (height > maxDimension) {
-                  width = Math.round((width * maxDimension) / height);
-                  height = maxDimension;
-                }
-              }
-
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) {
-                resolve(event.target?.result as string);
-                return;
-              }
-              ctx.drawImage(img, 0, 0, width, height);
-
-              let dataUrl = canvas.toDataURL('image/webp', quality);
-              if (!dataUrl.startsWith('data:image/webp')) {
-                dataUrl = canvas.toDataURL('image/jpeg', quality);
-              }
-              resolve(dataUrl);
-            };
-            img.onerror = () => resolve(event.target?.result as string);
-            img.src = event.target?.result as string;
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
         });
+        const json = await res.json();
+        if (json?.success && json?.url) {
+          mediaUrl = json.url;
+        } else {
+          mediaUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+        }
 
         newItems.push({
           id: `media-${Date.now()}-${i}`,
-          url: compressedBase64,
+          url: mediaUrl,
           name: file.name,
           isHero: isFirst,
           type: file.type.startsWith('video/') ? 'video' : 'image',
         });
       } catch (err) {
-        console.error('Error compressing image:', err);
+        console.error('Error uploading project media file:', err);
       }
     }
 
