@@ -79,7 +79,22 @@ export default function ProjectDetailPage() {
   const [allProjectsList, setAllProjectsList] = useState<ProjectDetailData[]>(projectsData);
 
   useEffect(() => {
-    function loadCurrentProject() {
+    async function loadCurrentProject() {
+      try {
+        const res = await fetch('/api/projects');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setAllProjectsList(json.data);
+          const found = json.data.find((p: any) => p.slug === slugParam);
+          if (found) {
+            setActiveProject(found);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Using local project data:', err);
+      }
+
       try {
         const stored = localStorage.getItem('myfolio_projects');
         let combinedList = [...projectsData];
