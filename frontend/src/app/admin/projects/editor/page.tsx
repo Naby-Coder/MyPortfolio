@@ -529,19 +529,20 @@ function ProjectEditorInner() {
       const updatedList = [projectPayload, ...existingList.filter((p: any) => p.slug !== projectPayload.slug)];
       localStorage.setItem('myfolio_projects', JSON.stringify(updatedList));
       window.dispatchEvent(new Event('myfolio_projects_updated'));
+
+      // Real-time Cloud Sync to Supabase
+      fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: projectPayload }),
+      }).catch((err) => console.warn('Projects cloud sync error:', err));
     } catch (e: any) {
-      console.warn('Storage quota reached, recovering gracefully:', e);
-      try {
-        const compactPayload = {
-          ...projectPayload,
-          gallery: uploadedMedia.slice(0, 3).map((m) => m.url),
-          gallery_items: uploadedMedia.slice(0, 3),
-        };
-        localStorage.setItem('myfolio_projects', JSON.stringify([compactPayload]));
-        window.dispatchEvent(new Event('myfolio_projects_updated'));
-      } catch (innerErr) {
-        console.error('Final fallback failed:', innerErr);
-      }
+      console.warn('Storage quota notice, saving to cloud directly:', e);
+      fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: projectPayload }),
+      }).catch((err) => console.warn('Projects cloud fallback error:', err));
     }
 
     setTimeout(() => {

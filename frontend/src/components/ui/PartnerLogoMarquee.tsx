@@ -110,32 +110,19 @@ export function PartnerLogoMarquee() {
   const [activeDot, setActiveDot] = useState(0);
 
   useEffect(() => {
-    function loadBadges() {
+    async function loadBadges() {
       try {
-        const stored = localStorage.getItem('myfolio_badges');
-        if (stored) {
-          const list: CertificationBadge[] = JSON.parse(stored);
-          if (Array.isArray(list) && list.length > 0) {
-            // Always ensure authentic badge images are linked for known IDs
-            const enriched = list.map((b) => {
-              const foundDefault = defaultCertificationBadges.find(
-                (d) => d.id === b.id || d.badgeCode === b.badgeCode
-              );
-              if (foundDefault?.image && (!b.image || b.image.startsWith('https://images.credly.com') || b.image.startsWith('https://upload.wikimedia.org'))) {
-                return { ...b, image: foundDefault.image, issuer: foundDefault.issuer, titleFr: foundDefault.titleFr };
-              }
-              return b;
-            });
-            setBadges(enriched);
-            localStorage.setItem('myfolio_badges', JSON.stringify(enriched));
-            return;
-          }
+        const res = await fetch('/api/certifications');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setBadges(json.data);
+          localStorage.setItem('myfolio_badges', JSON.stringify(json.data));
+          return;
         }
-        localStorage.setItem('myfolio_badges', JSON.stringify(defaultCertificationBadges));
-        setBadges(defaultCertificationBadges);
-      } catch (e) {
-        console.error('Error loading badges in marquee:', e);
+      } catch (err) {
+        console.warn('Using default certifications:', err);
       }
+      setBadges(defaultCertificationBadges);
     }
 
     loadBadges();

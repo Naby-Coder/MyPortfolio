@@ -519,13 +519,24 @@ export default function AboutPage() {
             }
           }
         }
-        const storedBadges = localStorage.getItem('myfolio_badges');
-        if (storedBadges) {
-          const parsedBadges = JSON.parse(storedBadges);
-          if (Array.isArray(parsedBadges) && parsedBadges.length > 0) {
-            setCertificationsList(parsedBadges);
-          }
-        }
+        // Load certifications from live cloud API
+        fetch('/api/certifications')
+          .then((r) => r.json())
+          .then((res) => {
+            if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+              setCertificationsList(res.data);
+              localStorage.setItem('myfolio_badges', JSON.stringify(res.data));
+            }
+          })
+          .catch(() => {
+            const storedBadges = localStorage.getItem('myfolio_badges');
+            if (storedBadges) {
+              const parsedBadges = JSON.parse(storedBadges);
+              if (Array.isArray(parsedBadges) && parsedBadges.length > 0) {
+                setCertificationsList(parsedBadges);
+              }
+            }
+          });
       } catch (err) {
         console.error('Error loading custom journey and badges:', err);
       }

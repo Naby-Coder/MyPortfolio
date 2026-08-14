@@ -64,7 +64,18 @@ export default function ProjectsPage() {
   const [projectList, setProjectList] = useState<ProjectDetailData[]>(projectsData);
 
   useEffect(() => {
-    function loadProjects() {
+    async function loadProjects() {
+      try {
+        const res = await fetch('/api/projects');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setProjectList(json.data);
+          return;
+        }
+      } catch (e) {
+        console.warn('Using local/default projects:', e);
+      }
+
       try {
         const stored = localStorage.getItem('myfolio_projects');
         if (stored) {

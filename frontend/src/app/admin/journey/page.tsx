@@ -366,8 +366,19 @@ export default function AdminJourneyPage() {
         localStorage.setItem('myfolio_educations', JSON.stringify(defaultEducations));
       }
 
-      const storedBadges = localStorage.getItem('myfolio_badges');
-      if (storedBadges) setBadges(JSON.parse(storedBadges));
+      // Load badges from live cloud API
+      fetch('/api/certifications')
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+            setBadges(res.data);
+            localStorage.setItem('myfolio_badges', JSON.stringify(res.data));
+          }
+        })
+        .catch(() => {
+          const storedBadges = localStorage.getItem('myfolio_badges');
+          if (storedBadges) setBadges(JSON.parse(storedBadges));
+        });
     } catch (e) {
       console.error('Error loading journey and badges data:', e);
     }
@@ -440,6 +451,14 @@ export default function AdminJourneyPage() {
     setBadges(updated);
     localStorage.setItem('myfolio_badges', JSON.stringify(updated));
     window.dispatchEvent(new Event('myfolio_badges_updated'));
+
+    // Real-time Cloud Sync to Supabase
+    fetch('/api/certifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ badges: updated }),
+    }).catch((err) => console.warn('Cloud sync error:', err));
+
     setIsBadgeModalOpen(false);
   };
 
@@ -449,6 +468,13 @@ export default function AdminJourneyPage() {
       setBadges(updated);
       localStorage.setItem('myfolio_badges', JSON.stringify(updated));
       window.dispatchEvent(new Event('myfolio_badges_updated'));
+
+      // Real-time Cloud Sync to Supabase
+      fetch('/api/certifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ badges: updated }),
+      }).catch((err) => console.warn('Cloud sync error:', err));
     }
   };
 
