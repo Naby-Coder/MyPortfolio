@@ -59,28 +59,7 @@ interface QuickDraft {
   date: string;
 }
 
-const defaultInquiries: Inquiry[] = [
-  {
-    id: 1,
-    name: 'Sarah Dumont',
-    email: 'sarah.dumont@fintech-ventures.com',
-    subject: 'Opportunité Lead Developer Next.js & Laravel',
-    message: 'Bonjour Mouhamed, j’ai découvert votre étude de cas SaaS Financial Management. Nous recherchons un Lead Developer pour notre fintech.',
-    intent: 'job',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    read: false,
-  },
-  {
-    id: 2,
-    name: 'Karim Diallo',
-    email: 'karim@africatech.io',
-    subject: 'Projet Application Mobile Flutter similaire à Drop',
-    message: 'Bonjour, nous souhaitons développer une application mobile de logistique urbaine en Afrique de l’Ouest et serions ravis de collaborer avec vous.',
-    intent: 'project',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-    read: true,
-  },
-];
+const defaultInquiries: Inquiry[] = [];
 
 const translations = {
   fr: {
