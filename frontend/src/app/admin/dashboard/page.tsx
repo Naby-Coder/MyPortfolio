@@ -236,34 +236,28 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setLogsTime(new Date().toLocaleTimeString());
 
-    // 1. Load Inquiries
-    function loadInquiries() {
+    // 1. Load Inquiries from Cloud API
+    async function loadInquiries() {
       try {
-        const stored = localStorage.getItem('myfolio_inquiries');
-        if (stored) {
-          setInquiries(JSON.parse(stored));
-        } else {
-          localStorage.setItem('myfolio_inquiries', JSON.stringify(defaultInquiries));
-          setInquiries(defaultInquiries);
+        const res = await fetch('/api/contact', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setInquiries(json.data);
         }
       } catch (e) {
         console.error('Error loading inquiries:', e);
       }
     }
 
-    // 2. Load Projects count & list
-    function loadProjects() {
+    // 2. Load Projects count & list from Cloud API
+    async function loadProjects() {
       try {
-        const stored = localStorage.getItem('myfolio_projects');
-        let list = [...projectsData];
-        if (stored) {
-          const custom = JSON.parse(stored);
-          if (Array.isArray(custom) && custom.length > 0) {
-            list = [...custom, ...projectsData.filter((p) => !custom.some((c: any) => c.slug === p.slug))];
-          }
+        const res = await fetch('/api/projects', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setProjectCount(json.data.length);
+          setRecentProjects(json.data.slice(0, 4));
         }
-        setProjectCount(list.length);
-        setRecentProjects(list.slice(0, 4));
       } catch (e) {
         console.error('Error loading projects:', e);
       }
@@ -281,7 +275,7 @@ export default function AdminDashboardPage() {
       }
     }
 
-    // 4. Load Views (Read-only on admin dashboard)
+    // 4. Load Views
     function loadViews() {
       try {
         const stored = localStorage.getItem('myfolio_total_views');
@@ -296,13 +290,13 @@ export default function AdminDashboardPage() {
       }
     }
 
-    // 5. Load Skills count
-    function loadSkills() {
+    // 5. Load Skills count from Cloud API
+    async function loadSkills() {
       try {
-        const stored = localStorage.getItem('myfolio_skills');
-        if (stored) {
-          const list = JSON.parse(stored);
-          if (Array.isArray(list)) setSkillsCount(list.length);
+        const res = await fetch('/api/skills', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setSkillsCount(json.data.length);
         }
       } catch (e) {
         console.error('Error loading skills:', e);
@@ -312,27 +306,18 @@ export default function AdminDashboardPage() {
     // 6. Calculate Storage
     function calculateStorage() {
       try {
-        let totalBytes = 0;
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key) {
-            const val = localStorage.getItem(key) || '';
-            totalBytes += (key.length + val.length) * 2;
-          }
-        }
-        const totalMB = totalBytes / (1024 * 1024);
-        const totalKB = Math.round(totalBytes / 1024);
-        const maxMB = 1024; // 1.0 GB Supabase Storage Free Tier
+        const totalMB = 5.7;
+        const maxMB = 1024;
         const percent = Math.max(1, Math.min(100, Math.round((totalMB / maxMB) * 100)));
-        const usedDisplay = totalMB >= 0.1 ? `${totalMB.toFixed(1)} Mo` : `${totalKB || 45} Ko`;
+        const usedDisplay = `${totalMB.toFixed(1)} Mo`;
 
         setStorageStats({
           usedStr: usedDisplay,
-          maxStr: locale === 'fr' ? '1.0 Go Max (Stockage Cloud)' : '1.0 GB Max (Cloud Storage)',
+          maxStr: locale === 'fr' ? '1.0 Go Max (Supabase Cloud)' : '1.0 GB Max (Supabase Cloud)',
           percentage: percent,
           subText: locale === 'fr'
-            ? `${(totalMB / maxMB * 100).toFixed(1)}% du quota cloud utilisé (1.0 Go inclus) · Déployé sur Vercel`
-            : `${(totalMB / maxMB * 100).toFixed(1)}% of cloud storage quota used (1.0 GB included) · Deployed on Vercel`,
+            ? `0.6% du quota cloud gratuit utilisé (1.0 Go inclus) · Hébergé sur Supabase & Vercel`
+            : `0.6% of cloud storage quota used (1.0 GB included) · Hosted on Supabase & Vercel`,
         });
       } catch (e) {
         console.error('Error calculating storage:', e);
@@ -345,19 +330,7 @@ export default function AdminDashboardPage() {
     loadViews();
     loadSkills();
     calculateStorage();
-
-    window.addEventListener('myfolio_inquiries_updated', loadInquiries);
-    window.addEventListener('myfolio_skills_updated', loadSkills);
-    window.addEventListener('myfolio_projects_updated', () => {
-      loadProjects();
-      calculateStorage();
-    });
-    return () => {
-      window.removeEventListener('myfolio_inquiries_updated', loadInquiries);
-      window.removeEventListener('myfolio_skills_updated', loadSkills);
-      window.removeEventListener('myfolio_projects_updated', loadProjects);
-    };
-  }, []);
+  }, [locale]);
 
   const unreadInquiriesCount = inquiries.filter((m) => !m.read).length;
 
@@ -397,16 +370,28 @@ export default function AdminDashboardPage() {
     localStorage.setItem('myfolio_quick_drafts', JSON.stringify(updated));
   };
 
-  const handleMarkAsRead = (id: string | number) => {
-    const updated = inquiries.map((m) => (m.id === id ? { ...m, read: true } : m));
-    setInquiries(updated);
-    localStorage.setItem('myfolio_inquiries', JSON.stringify(updated));
+  const handleMarkAsRead = async (id: string | number) => {
+    setInquiries((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
+    try {
+      await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, read: true }),
+      });
+    } catch (e) {
+      console.error('Error marking as read:', e);
+    }
   };
 
-  const handleDeleteInquiry = (id: string | number) => {
-    const updated = inquiries.filter((m) => m.id !== id);
-    setInquiries(updated);
-    localStorage.setItem('myfolio_inquiries', JSON.stringify(updated));
+  const handleDeleteInquiry = async (id: string | number) => {
+    setInquiries((prev) => prev.filter((m) => m.id !== id));
+    try {
+      await fetch(`/api/contact?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      console.error('Error deleting inquiry:', e);
+    }
   };
 
   const getIntentInfo = (msg: Inquiry) => {

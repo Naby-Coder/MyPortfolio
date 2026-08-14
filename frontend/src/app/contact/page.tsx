@@ -143,39 +143,26 @@ export default function ContactPage() {
     setFormState('loading');
 
     try {
-      const storedInquiries = localStorage.getItem('myfolio_inquiries');
-      const inquiriesList = storedInquiries ? JSON.parse(storedInquiries) : [];
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject || 'Nouvelle opportunité / Prise de contact',
+          message: formData.message,
+          intent: selectedIntent,
+        }),
+      });
 
-      const intentMap: Record<string, string> = {
-        job: 'Embauche / Recrutement',
-        project: 'Projet SaaS / Web',
-        design: 'Design UI/UX & Branding',
-        dev: 'Développement Sur-Mesure',
-        collab: 'Partenariat',
-        other: 'Autre demande',
-      };
-
-      const newInquiry = {
-        id: `inq_${Date.now()}`,
-        name: formData.name,
-        email: formData.email,
-        subject: formData.subject || 'Nouvelle opportunité / Prise de contact',
-        message: formData.message,
-        category: selectedIntent,
-        categoryLabel: intentMap[selectedIntent] || selectedIntent,
-        intent: selectedIntent,
-        date: new Date().toISOString(),
-        read: false,
-      };
-
-      inquiriesList.unshift(newInquiry);
-      localStorage.setItem('myfolio_inquiries', JSON.stringify(inquiriesList));
-      window.dispatchEvent(new Event('myfolio_inquiries_updated'));
-
-      setTimeout(() => {
+      const json = await res.json();
+      if (json.success) {
         setFormState('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
-      }, 600);
+      } else {
+        alert(json.message || 'Erreur lors de l’envoi du message');
+        setFormState('error');
+      }
     } catch (err) {
       console.error('Contact submission error:', err);
       setFormState('error');

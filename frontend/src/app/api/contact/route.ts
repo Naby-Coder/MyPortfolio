@@ -10,19 +10,19 @@ export async function GET() {
       const { data, error } = await supabase
         .from('contact_messages')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
-      if (!error && data) {
+      if (!error && data !== null) {
         const mapped = data.map((m: any) => ({
           id: m.id,
-          name: m.sender_name,
-          email: m.sender_email,
-          subject: m.subject,
-          message: m.message,
+          name: m.sender_name || 'Visiteur',
+          email: m.sender_email || '',
+          subject: m.subject || 'Prise de contact',
+          message: m.message || '',
           intent: m.project_type || 'project',
           categoryLabel: m.project_type || 'Projet',
-          date: m.created_at,
-          read: m.is_read || false,
+          date: m.created_at || new Date().toISOString(),
+          read: Boolean(m.is_read),
         }));
         return NextResponse.json({ success: true, data: mapped });
       }
@@ -30,7 +30,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data: [] });
   } catch (error) {
     console.error('Error fetching contact messages API:', error);
-    return NextResponse.json({ success: true, data: [] });
+    return NextResponse.json({ success: false, data: [] });
   }
 }
 
@@ -39,31 +39,42 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, email, subject, message, intent } = body;
 
+    if (!name || !email || !message) {
+      return NextResponse.json(
+        { success: false, message: 'Veuillez remplir tous les champs obligatoires.' },
+        { status: 400 }
+      );
+    }
+
     if (isSupabaseConfigured()) {
+      const payload: any = {
+        sender_name: String(name).trim(),
+        sender_email: String(email).trim(),
+        subject: String(subject || 'Prise de contact').trim(),
+        message: String(message).trim(),
+        project_type: String(intent || 'project').trim(),
+        is_read: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
       const { data, error } = await supabase
         .from('contact_messages')
-        .insert({
-          sender_name: name,
-          sender_email: email,
-          subject: subject || 'Nouveau message de contact',
-          message: message,
-          project_type: intent || 'project',
-          is_read: false,
-        })
-        .select()
-        .single();
+        .insert([payload])
+        .select();
 
       if (error) {
-        console.warn('Supabase contact insert notice:', error);
-      } else if (data) {
-        return NextResponse.json({ success: true, message: 'Message envoyé avec succès !', data });
+        console.error('Supabase contact insert error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
       }
+
+      return NextResponse.json({ success: true, message: 'Message envoyé avec succès !', data: data?.[0] });
     }
 
     return NextResponse.json({ success: true, message: 'Message reçu !' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in contact POST API:', error);
-    return NextResponse.json({ success: false, message: 'Erreur lors de l’envoi' }, { status: 500 });
+    return NextResponse.json({ success: false, message: error?.message || 'Erreur lors de l’envoi' }, { status: 500 });
   }
 }
 
@@ -73,12 +84,20 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
 
     if (isSupabaseConfigured() && id) {
-      await supabase.from('contact_messages').delete().eq('id', id);
+      const { error } = await supabase
+        .from('contact_messages')
+        .delete()
+        .eq('id', isNaN(Number(id)) ? id : Number(id));
+
+      if (error) {
+        console.error('Supabase delete contact message error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      }
     }
-    return NextResponse.json({ success: true, message: 'Message supprimé !' });
-  } catch (error) {
+    return NextResponse.json({ success: true, message: 'Message supprimé avec succès de Supabase !' });
+  } catch (error: any) {
     console.error('Error deleting contact message:', error);
-    return NextResponse.json({ success: false, message: 'Erreur lors de la suppression' }, { status: 500 });
+    return NextResponse.json({ success: false, message: error?.message || 'Erreur lors de la suppression' }, { status: 500 });
   }
 }
 
@@ -88,11 +107,19 @@ export async function PATCH(req: NextRequest) {
     const { id, read } = body;
 
     if (isSupabaseConfigured() && id) {
-      await supabase.from('contact_messages').update({ is_read: read }).eq('id', id);
+      const { error } = await supabase
+        .from('contact_messages')
+        .update({ is_read: Boolean(read), updated_at: new Date().toISOString() })
+        .eq('id', isNaN(Number(id)) ? id : Number(id));
+
+      if (error) {
+        console.error('Supabase update contact message error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      }
     }
-    return NextResponse.json({ success: true, message: 'Statut mis à jour !' });
-  } catch (error) {
+    return NextResponse.json({ success: true, message: 'Statut du message mis à jour !' });
+  } catch (error: any) {
     console.error('Error updating contact message:', error);
-    return NextResponse.json({ success: false, message: 'Erreur lors de la mise à jour' }, { status: 500 });
+    return NextResponse.json({ success: false, message: error?.message || 'Erreur lors de la mise à jour' }, { status: 500 });
   }
 }
