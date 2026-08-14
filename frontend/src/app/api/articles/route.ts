@@ -5,6 +5,8 @@ import { blogArticles } from '@/data/blogData';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const DEFAULT_COVER = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -77,19 +79,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const article = body.article || body;
 
-    const finalSlug = article.slug || (article.title_fr || article.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `article-${Date.now()}`;
+    const rawSlug = article.slug || (article.title_fr || article.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `article-${Date.now()}`;
+    const finalSlug = rawSlug.substring(0, 240);
+
+    let coverImage = article.cover_image || article.image || DEFAULT_COVER;
+    // Ensure cover_image does not exceed PostgreSQL VARCHAR(500) limit
+    if (coverImage && coverImage.length > 490) {
+      coverImage = DEFAULT_COVER;
+    }
 
     if (isSupabaseConfigured()) {
       const payload: any = {
         slug: finalSlug,
-        title_fr: article.title_fr || article.title || 'Nouvel Article',
-        title_en: article.title_en || article.title || article.title_fr || 'New Article',
-        excerpt_fr: article.excerpt_fr || article.excerpt || '',
-        excerpt_en: article.excerpt_en || article.excerpt || article.excerpt_fr || '',
-        content_fr: article.content_fr || article.content || '',
-        content_en: article.content_en || article.content || article.content_fr || '',
-        cover_image: article.cover_image || article.image || null,
-        reading_time: Number(article.reading_time) || 5,
+        title_fr: String(article.title_fr || article.title || 'Nouvel Article').substring(0, 240),
+        title_en: String(article.title_en || article.title || article.title_fr || 'New Article').substring(0, 240),
+        excerpt_fr: String(article.excerpt_fr || article.excerpt || ''),
+        excerpt_en: String(article.excerpt_en || article.excerpt || article.excerpt_fr || ''),
+        content_fr: String(article.content_fr || article.content || ''),
+        content_en: String(article.content_en || article.content || article.content_fr || ''),
+        cover_image: coverImage,
+        reading_time: Math.max(1, Number(article.reading_time) || 5),
         is_published: article.is_published !== undefined ? Boolean(article.is_published) : (article.status === 'LIVE'),
         published_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

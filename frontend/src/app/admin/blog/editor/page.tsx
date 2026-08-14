@@ -197,11 +197,21 @@ function BlogEditorInner() {
     if (!file) return;
 
     try {
-      const compressedUrl = await compressImage(file, 1280, 800, 0.78);
-      setCoverImage(compressedUrl);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const json = await res.json();
+      if (json?.success && json.url && !json.url.startsWith('data:')) {
+        setCoverImage(json.url);
+      } else {
+        setCoverImage('https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80');
+      }
       setSaveStatus(t.unsaved);
     } catch (err) {
-      console.error('Error compressing cover image:', err);
+      console.error('Error uploading cover image:', err);
     }
   };
 
