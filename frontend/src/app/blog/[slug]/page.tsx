@@ -23,18 +23,20 @@ export default function ArticleDetailPage() {
   const staticArticle = blogArticles.find((a) => a.slug === slugParam) || blogArticles[0];
 
   React.useEffect(() => {
-    try {
-      const stored = localStorage.getItem('myfolio_articles');
-      if (stored) {
-        const articles = JSON.parse(stored);
-        const found = articles.find((a: any) => a.slug === slugParam);
-        if (found) {
-          setCustomArticle(found);
+    async function loadArticleDetail() {
+      if (!slugParam) return;
+      try {
+        const res = await fetch(`/api/articles?slug=${encodeURIComponent(slugParam as string)}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setCustomArticle(json.data[0]);
         }
+      } catch (e) {
+        console.error('Error loading article detail from API:', e);
       }
-    } catch (e) {
-      console.error('Error loading custom article detail:', e);
     }
+
+    loadArticleDetail();
   }, [slugParam]);
 
   const articleTitle = customArticle

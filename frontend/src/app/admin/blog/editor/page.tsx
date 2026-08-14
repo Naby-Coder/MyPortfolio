@@ -145,56 +145,33 @@ function BlogEditorInner() {
       return;
     }
 
-    try {
-      const stored = localStorage.getItem('myfolio_articles');
-      let found = null;
-      if (stored) {
-        const list = JSON.parse(stored);
-        if (Array.isArray(list)) {
-          found = list.find((a: any) => a.slug === querySlug);
+    async function loadArticle() {
+      try {
+        const res = await fetch(`/api/articles?slug=${encodeURIComponent(querySlug!)}`, { cache: 'no-store' });
+        const json = await res.json();
+        let found = null;
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          found = json.data[0];
         }
-      }
 
-      if (!found) {
-        const staticA = blogArticles.find((a) => a.slug === querySlug);
-        if (staticA) {
-          const frMarkdown = staticA.sections
-            .map((s) => `# ${s.titleFr}\n\n${s.bodyFr}${s.codeSnippet ? `\n\n\`\`\`${s.codeSnippet.language}\n${s.codeSnippet.code}\n\`\`\`` : ''}`)
-            .join('\n\n');
-          const enMarkdown = staticA.sections
-            .map((s) => `# ${s.titleEn}\n\n${s.bodyEn}${s.codeSnippet ? `\n\n\`\`\`${s.codeSnippet.language}\n${s.codeSnippet.code}\n\`\`\`` : ''}`)
-            .join('\n\n');
-
-          found = {
-            title_fr: staticA.titleFr,
-            title_en: staticA.titleEn,
-            slug: staticA.slug,
-            category: staticA.categoryFr,
-            cover_image: staticA.image,
-            excerpt_fr: staticA.excerptFr,
-            excerpt_en: staticA.excerptEn,
-            content_fr: frMarkdown,
-            content_en: enMarkdown,
-            is_published: true,
-          };
+        if (found) {
+          setTitleFr(found.title_fr || found.title || '');
+          setTitleEn(found.title_en || found.title || '');
+          setSlug(found.slug || querySlug!);
+          setCategory(found.category || CATEGORIES[0]);
+          setCoverImage(found.cover_image || found.image || coverImage);
+          setExcerptFr(found.excerpt_fr || found.excerpt || '');
+          setExcerptEn(found.excerpt_en || found.excerpt || '');
+          setContentFr(found.content_fr || found.content || '');
+          setContentEn(found.content_en || found.content || '');
+          setArticleStatus(found.is_published ? 'LIVE' : 'DRAFT');
         }
+      } catch (e) {
+        console.error('Error loading article in editor:', e);
       }
-
-      if (found) {
-        setTitleFr(found.title_fr || found.title || '');
-        setTitleEn(found.title_en || found.title || '');
-        setSlug(found.slug || querySlug);
-        setCategory(found.category || CATEGORIES[0]);
-        setCoverImage(found.cover_image || found.image || coverImage);
-        setExcerptFr(found.excerpt_fr || found.excerpt || '');
-        setExcerptEn(found.excerpt_en || found.excerpt || '');
-        setContentFr(found.content_fr || found.content || '');
-        setContentEn(found.content_en || found.content || '');
-        setArticleStatus(found.is_published ? 'LIVE' : 'DRAFT');
-      }
-    } catch (e) {
-      console.error('Error loading article in editor:', e);
     }
+
+    loadArticle();
   }, [querySlug]);
 
   const currentContent = activeLangTab === 'fr' ? contentFr : contentEn;
@@ -228,50 +205,48 @@ function BlogEditorInner() {
     }
   };
 
-  const handleSaveArticle = (targetStatus: 'LIVE' | 'DRAFT') => {
+  const handleSaveArticle = async (targetStatus: 'LIVE' | 'DRAFT') => {
     setArticleStatus(targetStatus);
     setSaveStatus(targetStatus === 'LIVE' ? t.publishing : t.savingDraft);
 
     const generatedSlug = slug.trim() || titleFr.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `article-${Date.now()}`;
 
     const articlePayload = {
-      id: Date.now(),
       slug: generatedSlug,
       title_fr: titleFr || 'Nouvel Article',
       title_en: titleEn || titleFr || 'New Article',
-      title: titleFr,
       category,
       excerpt_fr: excerptFr,
       excerpt_en: excerptEn || excerptFr,
       content_fr: contentFr,
       content_en: contentEn || contentFr,
       cover_image: coverImage,
-      image: coverImage,
       reading_time: estimatedReadTime,
       is_published: targetStatus === 'LIVE',
-      published_at: new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
+      published_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     try {
-      const stored = localStorage.getItem('myfolio_articles');
-      const existingList = stored ? JSON.parse(stored) : [];
-      const updatedList = [articlePayload, ...existingList.filter((a: any) => a.slug !== articlePayload.slug)];
-      localStorage.setItem('myfolio_articles', JSON.stringify(updatedList));
-      window.dispatchEvent(new Event('myfolio_articles_updated'));
+      const res = await fetch('/api/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ article: articlePayload }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        alert(json.message || 'Erreur lors de l’enregistrement de l’article');
+        setSaveStatus(t.unsaved);
+        return;
+      }
       setSlug(generatedSlug);
-    } catch (e) {
-      console.error('Failed to save article:', e);
-    }
-
-    setTimeout(() => {
       setSaveStatus(targetStatus === 'LIVE' ? t.published : t.draftSaved);
       setTimeout(() => setSaveStatus(t.autosaved), 3000);
-    }, 500);
+    } catch (e) {
+      console.error('Failed to save article via API:', e);
+      alert('Erreur de connexion lors de la sauvegarde cloud');
+      setSaveStatus(t.unsaved);
+    }
   };
 
   return (

@@ -43,47 +43,34 @@ export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(0);
 
-  const defaultArticles = blogArticles.map((a) => ({
-    id: a.id,
-    slug: a.slug,
-    title: locale === 'fr' ? a.titleFr : a.titleEn,
-    category: locale === 'fr' ? a.categoryFr : a.categoryEn,
-    excerpt: locale === 'fr' ? a.excerptFr : a.excerptEn,
-    date: locale === 'fr' ? a.dateFr : a.dateEn,
-    readingTime: a.readingTime,
-    image: a.image,
-  }));
-
-  const [articlesList, setArticlesList] = useState(defaultArticles);
+  const [articlesList, setArticlesList] = useState<any[]>([]);
 
   React.useEffect(() => {
-    function loadArticles() {
+    async function loadArticles() {
       try {
-        const stored = localStorage.getItem('myfolio_articles');
-        const customArticles = stored ? JSON.parse(stored) : [];
-        if (Array.isArray(customArticles) && customArticles.length > 0) {
-          const formatted = customArticles.map((a: any) => ({
-            id: a.id || Date.now(),
-            slug: a.slug,
-            title: locale === 'fr' ? (a.title_fr || a.title) : (a.title_en || a.title || a.title_fr),
-            excerpt: locale === 'fr' ? (a.excerpt_fr || a.excerpt) : (a.excerpt_en || a.excerpt || a.excerpt_fr),
-            category: a.category || (locale === 'fr' ? 'Architecture & Full-Stack' : 'Architecture & Full-Stack'),
-            date: a.published_at || (locale === 'fr' ? 'Août 2026' : 'August 2026'),
-            readingTime: a.reading_time || 5,
-            image: a.cover_image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
-          }));
-          setArticlesList([...formatted, ...defaultArticles.filter((m) => !formatted.some((f) => f.slug === m.slug))]);
-        } else {
-          setArticlesList(defaultArticles);
+        const res = await fetch('/api/articles?published_only=true', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          const formatted = json.data
+            .filter((a: any) => a.is_published !== false)
+            .map((a: any) => ({
+              id: a.id || a.slug,
+              slug: a.slug,
+              title: locale === 'fr' ? (a.title_fr || a.title) : (a.title_en || a.title || a.title_fr),
+              excerpt: locale === 'fr' ? (a.excerpt_fr || a.excerpt) : (a.excerpt_en || a.excerpt || a.excerpt_fr),
+              category: a.category || (locale === 'fr' ? 'Architecture & Full-Stack' : 'Architecture & Full-Stack'),
+              date: a.published_at ? (a.published_at.includes('T') ? a.published_at.split('T')[0] : a.published_at) : (locale === 'fr' ? 'Août 2026' : 'August 2026'),
+              readingTime: Number(a.reading_time) || 5,
+              image: a.cover_image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
+            }));
+          setArticlesList(formatted);
         }
       } catch (e) {
-        console.error('Error loading articles:', e);
+        console.error('Error loading published articles:', e);
       }
     }
 
     loadArticles();
-    window.addEventListener('myfolio_articles_updated', loadArticles);
-    return () => window.removeEventListener('myfolio_articles_updated', loadArticles);
   }, [locale]);
 
   const currentCategoryName = t.categories[selectedCategory];

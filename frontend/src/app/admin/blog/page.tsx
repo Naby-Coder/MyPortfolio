@@ -98,74 +98,50 @@ export default function BlogManagerPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'DRAFT'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [articles, setArticles] = useState<AdminArticleItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const defaultAdminArticles: AdminArticleItem[] = blogArticles.map((b) => ({
-    id: b.id,
-    slug: b.slug,
-    title: b.titleFr,
-    titleEn: b.titleEn,
-    category: b.categoryFr,
-    excerpt: b.excerptFr,
-    excerptEn: b.excerptEn,
-    status: 'LIVE',
-    date: b.dateFr,
-    readingTime: b.readingTime,
-    image: b.image,
-  }));
-
-  const loadArticles = () => {
+  const loadArticles = async () => {
     try {
-      const stored = localStorage.getItem('myfolio_articles');
-      let customList: AdminArticleItem[] = [];
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          customList = parsed.map((a: any) => ({
-            id: a.id || a.slug,
-            slug: a.slug,
-            title: a.title_fr || a.title || 'Sans titre',
-            titleEn: a.title_en || a.title || 'Untitled',
-            category: a.category || 'Développement Full-Stack',
-            excerpt: a.excerpt_fr || a.excerpt || '',
-            excerptEn: a.excerpt_en || a.excerpt || '',
-            status: a.is_published ? 'LIVE' : 'DRAFT',
-            date: a.published_at || (locale === 'fr' ? 'Août 2026' : 'August 2026'),
-            readingTime: a.reading_time || 5,
-            image: a.cover_image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
-          }));
-        }
+      const res = await fetch('/api/articles', { cache: 'no-store' });
+      const json = await res.json();
+      if (json?.success && Array.isArray(json.data)) {
+        const mapped: AdminArticleItem[] = json.data.map((a: any) => ({
+          id: a.id || a.slug,
+          slug: a.slug,
+          title: a.title_fr || a.title || 'Sans titre',
+          titleEn: a.title_en || a.title || 'Untitled',
+          category: a.category || 'Développement Full-Stack',
+          excerpt: a.excerpt_fr || a.excerpt || '',
+          excerptEn: a.excerpt_en || a.excerpt || '',
+          status: a.is_published ? 'LIVE' : 'DRAFT',
+          date: a.published_at ? (a.published_at.includes('T') ? a.published_at.split('T')[0] : a.published_at) : (locale === 'fr' ? 'Août 2026' : 'August 2026'),
+          readingTime: Number(a.reading_time) || 5,
+          image: a.cover_image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
+        }));
+        setArticles(mapped);
       }
-
-      const combined = [
-        ...customList,
-        ...defaultAdminArticles.filter((d) => !customList.some((c) => c.slug === d.slug)),
-      ];
-
-      setArticles(combined);
     } catch (e) {
-      console.error('Error loading articles in blog manager:', e);
-      setArticles(defaultAdminArticles);
+      console.error('Error loading articles from API:', e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadArticles();
-    window.addEventListener('myfolio_articles_updated', loadArticles);
-    return () => window.removeEventListener('myfolio_articles_updated', loadArticles);
   }, [locale]);
 
-  const handleDelete = (slugToDelete: string) => {
+  const handleDelete = async (slugToDelete: string) => {
     if (!confirm(t.confirmDelete)) return;
 
+    setArticles((prev) => prev.filter((a) => a.slug !== slugToDelete));
+
     try {
-      const stored = localStorage.getItem('myfolio_articles');
-      const parsed = stored ? JSON.parse(stored) : [];
-      const updated = parsed.filter((a: any) => a.slug !== slugToDelete);
-      localStorage.setItem('myfolio_articles', JSON.stringify(updated));
-      window.dispatchEvent(new Event('myfolio_articles_updated'));
-      setArticles((prev) => prev.filter((a) => a.slug !== slugToDelete));
+      await fetch(`/api/articles?slug=${encodeURIComponent(slugToDelete)}`, {
+        method: 'DELETE',
+      });
     } catch (e) {
-      console.error('Error deleting article:', e);
+      console.error('Error deleting article via API:', e);
     }
   };
 
