@@ -54,21 +54,18 @@ export async function POST(req: NextRequest) {
         message: String(message).trim(),
         project_type: String(intent || 'project').trim(),
         is_read: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('contact_messages')
-        .insert([payload])
-        .select();
+        .insert([payload]);
 
       if (error) {
         console.error('Supabase contact insert error:', error);
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, message: 'Message envoyé avec succès !', data: data?.[0] });
+      return NextResponse.json({ success: true, message: 'Message envoyé avec succès !' });
     }
 
     return NextResponse.json({ success: true, message: 'Message reçu !' });
@@ -109,7 +106,7 @@ export async function PATCH(req: NextRequest) {
     if (isSupabaseConfigured() && id) {
       const { error } = await supabase
         .from('contact_messages')
-        .update({ is_read: Boolean(read), updated_at: new Date().toISOString() })
+        .update({ is_read: Boolean(read) })
         .eq('id', isNaN(Number(id)) ? id : Number(id));
 
       if (error) {
