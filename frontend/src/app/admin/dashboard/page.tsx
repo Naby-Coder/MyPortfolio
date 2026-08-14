@@ -236,16 +236,36 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setLogsTime(new Date().toLocaleTimeString());
 
-    // 1. Load Inquiries from Cloud API
+    // 1. Load Inquiries from Cloud API and Local Storage
     async function loadInquiries() {
+      let localList: Inquiry[] = [];
+      try {
+        const stored = localStorage.getItem('myfolio_inbox_messages');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) localList = parsed;
+        }
+      } catch (e) {}
+
       try {
         const res = await fetch('/api/contact', { cache: 'no-store' });
         const json = await res.json();
         if (json?.success && Array.isArray(json.data)) {
-          setInquiries(json.data);
+          const map = new Map<string, Inquiry>();
+          localList.forEach((m) => map.set(String(m.id), m));
+          json.data.forEach((m: any) => map.set(String(m.id), m));
+          const combined = Array.from(map.values()).sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          setInquiries(combined);
+          return;
         }
       } catch (e) {
-        console.error('Error loading inquiries:', e);
+        console.error('Error loading inquiries from API:', e);
+      }
+
+      if (localList.length > 0) {
+        setInquiries(localList);
       }
     }
 
@@ -371,7 +391,13 @@ export default function AdminDashboardPage() {
   };
 
   const handleMarkAsRead = async (id: string | number) => {
-    setInquiries((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
+    setInquiries((prev) => {
+      const updated = prev.map((m) => (m.id === id ? { ...m, read: true } : m));
+      try {
+        localStorage.setItem('myfolio_inbox_messages', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     try {
       await fetch('/api/contact', {
         method: 'PATCH',
@@ -384,7 +410,13 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteInquiry = async (id: string | number) => {
-    setInquiries((prev) => prev.filter((m) => m.id !== id));
+    setInquiries((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      try {
+        localStorage.setItem('myfolio_inbox_messages', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     try {
       await fetch(`/api/contact?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
