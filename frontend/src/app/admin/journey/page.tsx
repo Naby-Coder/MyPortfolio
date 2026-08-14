@@ -375,7 +375,7 @@ export default function AdminJourneyPage() {
 
   const handleOpenEditBadge = (item: CertificationBadge) => {
     setEditingBadge(item);
-    setBadgeCode(item.badgeCode);
+    setBadgeCode(item.badgeCode || '');
     setBadgeTitleFr(item.titleFr);
     setBadgeTitleEn(item.titleEn);
     setBadgeIssuer(item.issuer);
@@ -898,7 +898,7 @@ export default function AdminJourneyPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteBadge(b.id)}
+                        onClick={() => handleDeleteBadge(String(b.id))}
                         className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
                         title={t.delete}
                       >
