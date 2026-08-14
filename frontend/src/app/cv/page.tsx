@@ -232,7 +232,7 @@ export default function CvPage() {
     fetch('/api/experiences')
       .then((res) => res.json())
       .then((res) => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res?.success && Array.isArray(res.data)) {
           setCustomExperiences(res.data);
         }
       })
@@ -241,7 +241,7 @@ export default function CvPage() {
     fetch('/api/education')
       .then((res) => res.json())
       .then((res) => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res?.success && Array.isArray(res.data)) {
           setCustomEducations(res.data);
         }
       })

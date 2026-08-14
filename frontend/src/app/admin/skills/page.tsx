@@ -228,47 +228,32 @@ export default function AdminSkillsPage() {
     if (!formName.trim()) return;
 
     const payload = {
+      ...(editingItem ? { id: editingItem.id } : {}),
       name: formName.trim(),
       category: formCategory,
       level_percentage: formProficiency,
     };
 
-    let updatedList: SupabaseSkill[] = [];
-
-    if (editingItem) {
-      updatedList = techList.map((item) =>
-        item.id === editingItem.id ? { ...item, ...payload } : item
-      );
-      try {
-        await updateSupabaseSkill(editingItem.id, payload);
-      } catch (err) {
-        console.warn('Supabase update warning:', err);
-      }
-    } else {
-      const newItem: SupabaseSkill = {
-        id: Date.now().toString(),
-        ...payload,
-      };
-      try {
-        const created = await addSupabaseSkill(payload);
-        if (created && created[0]) {
-          newItem.id = created[0].id;
-        }
-      } catch (err) {
-        console.warn('Supabase create warning:', err);
-      }
-      updatedList = [newItem, ...techList];
-    }
-
-    setTechList(updatedList);
-
-    // Save to API
     try {
-      await fetch('/api/skills', {
+      const res = await fetch('/api/skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const json = await res.json();
+      if (json.data) {
+        if (editingItem) {
+          setTechList((prev) => prev.map((item) => String(item.id) === String(editingItem.id) ? { ...item, ...json.data } : item));
+        } else {
+          setTechList((prev) => [json.data, ...prev]);
+        }
+      } else {
+        if (editingItem) {
+          setTechList((prev) => prev.map((item) => String(item.id) === String(editingItem.id) ? { ...item, ...payload } : item));
+        } else {
+          setTechList((prev) => [{ id: Date.now(), ...payload }, ...prev]);
+        }
+      }
     } catch (err) {
       console.error('Error saving skill via API:', err);
     }
@@ -278,14 +263,12 @@ export default function AdminSkillsPage() {
 
   const handleDeleteItem = async (id: string | number) => {
     if (confirm(t.confirmDelete)) {
-      const updated = techList.filter((item) => String(item.id) !== String(id));
-      setTechList(updated);
+      setTechList((prev) => prev.filter((item) => String(item.id) !== String(id)));
 
       try {
-        await deleteSupabaseSkill(id);
         await fetch(`/api/skills?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       } catch (err) {
-        console.warn('Supabase delete warning:', err);
+        console.error('Supabase delete warning:', err);
       }
     }
   };

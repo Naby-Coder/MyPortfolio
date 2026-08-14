@@ -279,9 +279,9 @@ export default function AdminJourneyPage() {
   const [activeTab, setActiveTab] = useState<'experiences' | 'educations' | 'badges'>('experiences');
 
   // Lists
-  const [experiences, setExperiences] = useState<AdminExperience[]>(defaultExperiences);
-  const [educations, setEducations] = useState<AdminEducation[]>(defaultEducations);
-  const [badges, setBadges] = useState<CertificationBadge[]>(defaultCertificationBadges);
+  const [experiences, setExperiences] = useState<AdminExperience[]>([]);
+  const [educations, setEducations] = useState<AdminEducation[]>([]);
+  const [badges, setBadges] = useState<CertificationBadge[]>([]);
 
   // Modals
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
@@ -331,7 +331,7 @@ export default function AdminJourneyPage() {
     fetch('/api/experiences')
       .then((res) => res.json())
       .then((res) => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res?.success && Array.isArray(res.data)) {
           setExperiences(res.data);
         }
       })
@@ -341,7 +341,7 @@ export default function AdminJourneyPage() {
     fetch('/api/education')
       .then((res) => res.json())
       .then((res) => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res?.success && Array.isArray(res.data)) {
           setEducations(res.data);
         }
       })
@@ -351,7 +351,7 @@ export default function AdminJourneyPage() {
     fetch('/api/certifications')
       .then((r) => r.json())
       .then((res) => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res?.success && Array.isArray(res.data)) {
           setBadges(res.data);
         }
       })

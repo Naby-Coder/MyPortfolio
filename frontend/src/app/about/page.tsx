@@ -468,7 +468,7 @@ export default function AboutPage() {
       fetch('/api/experiences')
         .then((r) => r.json())
         .then((res) => {
-          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (res?.success && Array.isArray(res.data)) {
             setExperiences(res.data);
           }
         })
@@ -477,7 +477,7 @@ export default function AboutPage() {
       fetch('/api/education')
         .then((r) => r.json())
         .then((res) => {
-          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (res?.success && Array.isArray(res.data)) {
             setEducations(res.data);
           }
         })
@@ -486,7 +486,7 @@ export default function AboutPage() {
       fetch('/api/certifications')
         .then((r) => r.json())
         .then((res) => {
-          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (res?.success && Array.isArray(res.data)) {
             setCertificationsList(res.data);
           }
         })
@@ -500,13 +500,10 @@ export default function AboutPage() {
         let skills: SupabaseSkill[] = [];
         const res = await fetch('/api/skills');
         const json = await res.json();
-        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json?.success && Array.isArray(json.data)) {
           skills = json.data;
         } else {
           skills = await fetchSupabaseSkills();
-          if (!skills || skills.length === 0) {
-            skills = fallbackSkills;
-          }
         }
 
         if (skills && skills.length > 0) {
