@@ -343,16 +343,16 @@ function ProjectEditorInner() {
 
       if (current) {
         setSlug(current.slug || targetSlug);
-        setTitleFr(current.title_fr || current.title || '');
-        setTitleEn(current.title_en || current.title || '');
-        setSummaryFr(current.summary_fr || current.summary || '');
-        setSummaryEn(current.summary_en || current.summary || '');
-        setProblemFr(current.problem_fr || '');
-        setProblemEn(current.problem_en || '');
-        setSolutionFr(current.solution_fr || '');
-        setSolutionEn(current.solution_en || '');
-        setRoleFr(current.role_fr || '');
-        setRoleEn(current.role_en || '');
+        setTitleFr(current.title_fr || current.titleFr || current.title || '');
+        setTitleEn(current.title_en || current.titleEn || current.title || current.title_fr || '');
+        setSummaryFr(current.summary_fr || current.summaryFr || current.summary || '');
+        setSummaryEn(current.summary_en || current.summaryEn || current.summary || current.summary_fr || '');
+        setProblemFr(current.problem_fr || current.problemFr || current.problem || current.challenge?.p1Fr || '');
+        setProblemEn(current.problem_en || current.problemEn || current.problem || current.challenge?.p1En || '');
+        setSolutionFr(current.solution_fr || current.solutionFr || current.solution || current.solution?.overviewFr || '');
+        setSolutionEn(current.solution_en || current.solutionEn || current.solution || current.solution?.overviewEn || '');
+        setRoleFr(current.role_fr || current.roleFr || current.role || '');
+        setRoleEn(current.role_en || current.roleEn || current.role || '');
         setProjectStatus(current.status || 'LIVE');
 
         setArchClientTitle(
