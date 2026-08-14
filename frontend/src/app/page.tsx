@@ -156,7 +156,18 @@ export default function HomePage() {
   const [featuredProject, setFeaturedProject] = React.useState<any>(projectsData[0]);
 
   React.useEffect(() => {
-    function loadFeatured() {
+    async function loadFeatured() {
+      try {
+        const res = await fetch('/api/projects', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setFeaturedProject(json.data[0]);
+          return;
+        }
+      } catch (e) {
+        console.warn('Cloud featured project notice:', e);
+      }
+
       try {
         const stored = localStorage.getItem('myfolio_projects');
         if (stored) {
