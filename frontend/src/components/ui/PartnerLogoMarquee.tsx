@@ -86,7 +86,7 @@ export const defaultCertificationBadges: CertificationBadge[] = [
     issuer: 'Cisco Networking Academy',
     date: '2024',
     category: 'Réseaux & Protocoles',
-    image: 'https://images.credly.com/size/340x340/images/68172ee9-9740-42f0-a178-9585e828d578/CCNA_ITN.png',
+    image: '/certificates/cisco-ccna-verified.png',
     credentialUrl: 'https://www.netacad.com/',
     colorVariant: 'blue',
   },
