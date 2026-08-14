@@ -116,15 +116,13 @@ export function PartnerLogoMarquee() {
         if (stored) {
           const list: CertificationBadge[] = JSON.parse(stored);
           if (Array.isArray(list) && list.length > 0) {
-            // Auto-enrich badges with default images if they don't have one
+            // Always ensure authentic badge images are linked for known IDs
             const enriched = list.map((b) => {
-              if (!b.image) {
-                const foundDefault = defaultCertificationBadges.find(
-                  (d) => d.id === b.id || d.badgeCode === b.badgeCode
-                );
-                if (foundDefault?.image) {
-                  return { ...b, image: foundDefault.image };
-                }
+              const foundDefault = defaultCertificationBadges.find(
+                (d) => d.id === b.id || d.badgeCode === b.badgeCode
+              );
+              if (foundDefault?.image && (!b.image || b.image.startsWith('https://images.credly.com') || b.image.startsWith('https://upload.wikimedia.org'))) {
+                return { ...b, image: foundDefault.image, issuer: foundDefault.issuer, titleFr: foundDefault.titleFr };
               }
               return b;
             });
