@@ -415,9 +415,9 @@ export default function AdminJourneyPage() {
     e.preventDefault();
     if (!badgeCode.trim() || !badgeTitleFr.trim() || !badgeIssuer.trim()) return;
 
-    const payload: CertificationBadge = {
-      id: editingBadge ? editingBadge.id : `badge-${Date.now()}`,
-      badgeCode: badgeCode.trim(),
+    const payload: any = {
+      ...(editingBadge ? { id: editingBadge.id } : {}),
+      badgeCode: badgeCode.trim() || 'CERT',
       titleFr: badgeTitleFr.trim(),
       titleEn: badgeTitleEn.trim() || badgeTitleFr.trim(),
       issuer: badgeIssuer.trim(),
@@ -428,21 +428,32 @@ export default function AdminJourneyPage() {
       colorVariant: badgeColor,
     };
 
-    let updated: CertificationBadge[] = [];
-    if (editingBadge) {
-      updated = badges.map((b) => (b.id === editingBadge.id ? payload : b));
-    } else {
-      updated = [payload, ...badges];
-    }
-
-    setBadges(updated);
-
     try {
-      await fetch('/api/certifications', {
+      const res = await fetch('/api/certifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ badges: updated }),
+        body: JSON.stringify({ badge: payload }),
       });
+      const json = await res.json();
+      if (json.data) {
+        const savedBadge: CertificationBadge = {
+          id: String(json.data.id),
+          badgeCode: json.data.title ? json.data.title.substring(0, 16).toUpperCase() : 'CERT',
+          titleFr: json.data.title || payload.titleFr,
+          titleEn: json.data.title || payload.titleEn,
+          issuer: json.data.issuer || payload.issuer,
+          date: json.data.issue_date || payload.date,
+          category: json.data.category || payload.category,
+          credentialUrl: json.data.credential_url || payload.credentialUrl,
+          image: json.data.badge_image || payload.image,
+          colorVariant: payload.colorVariant,
+        };
+        if (editingBadge) {
+          setBadges((prev) => prev.map((b) => b.id === editingBadge.id ? savedBadge : b));
+        } else {
+          setBadges((prev) => [savedBadge, ...prev]);
+        }
+      }
     } catch (err) {
       console.error('Cloud sync error (certifications):', err);
     }
@@ -452,8 +463,7 @@ export default function AdminJourneyPage() {
 
   const handleDeleteBadge = async (id: string) => {
     if (confirm(t.confirmDeleteBadge)) {
-      const updated = badges.filter((b) => b.id !== id);
-      setBadges(updated);
+      setBadges((prev) => prev.filter((b) => b.id !== id));
 
       try {
         await fetch(`/api/certifications?id=${encodeURIComponent(id)}`, {
@@ -496,8 +506,8 @@ export default function AdminJourneyPage() {
     e.preventDefault();
     if (!expRoleFr.trim() || !expCompany.trim()) return;
 
-    const payload: AdminExperience = {
-      id: editingExp ? editingExp.id : Date.now(),
+    const payload = {
+      ...(editingExp ? { id: editingExp.id } : {}),
       role_fr: expRoleFr.trim(),
       role_en: expRoleEn.trim() || expRoleFr.trim(),
       company: expCompany.trim(),
@@ -508,21 +518,31 @@ export default function AdminJourneyPage() {
       tags: expTags.split(',').map((t) => t.trim()).filter(Boolean),
     };
 
-    let updated: AdminExperience[] = [];
-    if (editingExp) {
-      updated = experiences.map((item) => (item.id === editingExp.id ? payload : item));
-    } else {
-      updated = [payload, ...experiences];
-    }
-
-    setExperiences(updated);
-
     try {
-      await fetch('/api/experiences', {
+      const res = await fetch('/api/experiences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const json = await res.json();
+      if (json.data) {
+        const savedExp: AdminExperience = {
+          id: json.data.id,
+          role_fr: json.data.position_fr || payload.role_fr,
+          role_en: json.data.position_en || payload.role_en,
+          company: json.data.company || payload.company,
+          period_fr: json.data.location || payload.period_fr,
+          period_en: json.data.location || payload.period_en,
+          bullets_fr: payload.bullets_fr,
+          bullets_en: payload.bullets_en,
+          tags: Array.isArray(json.data.technologies) ? json.data.technologies : payload.tags,
+        };
+        if (editingExp) {
+          setExperiences((prev) => prev.map((item) => item.id === editingExp.id ? savedExp : item));
+        } else {
+          setExperiences((prev) => [savedExp, ...prev]);
+        }
+      }
     } catch (err) {
       console.error('Cloud save error (experiences):', err);
     }
@@ -532,8 +552,7 @@ export default function AdminJourneyPage() {
 
   const handleDeleteExp = async (id: number | string) => {
     if (confirm(t.confirmDeleteExp)) {
-      const updated = experiences.filter((item) => item.id !== id);
-      setExperiences(updated);
+      setExperiences((prev) => prev.filter((item) => item.id !== id));
 
       try {
         await fetch(`/api/experiences?id=${encodeURIComponent(id)}`, {
@@ -576,8 +595,8 @@ export default function AdminJourneyPage() {
     e.preventDefault();
     if (!eduDegreeFr.trim() || !eduSchool.trim()) return;
 
-    const payload: AdminEducation = {
-      id: editingEdu ? editingEdu.id : Date.now(),
+    const payload = {
+      ...(editingEdu ? { id: editingEdu.id } : {}),
       degree_fr: eduDegreeFr.trim(),
       degree_en: eduDegreeEn.trim() || eduDegreeFr.trim(),
       school: eduSchool.trim(),
@@ -588,21 +607,31 @@ export default function AdminJourneyPage() {
       badgeVariant: eduBadgeVariant,
     };
 
-    let updated: AdminEducation[] = [];
-    if (editingEdu) {
-      updated = educations.map((item) => (item.id === editingEdu.id ? payload : item));
-    } else {
-      updated = [payload, ...educations];
-    }
-
-    setEducations(updated);
-
     try {
-      await fetch('/api/education', {
+      const res = await fetch('/api/education', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const json = await res.json();
+      if (json.data) {
+        const savedEdu: AdminEducation = {
+          id: json.data.id,
+          degree_fr: json.data.degree_fr || payload.degree_fr,
+          degree_en: json.data.degree_en || payload.degree_en,
+          school: json.data.institution || payload.school,
+          period_fr: payload.period_fr,
+          period_en: payload.period_en,
+          badge_fr: payload.badge_fr,
+          badge_en: payload.badge_en,
+          badgeVariant: payload.badgeVariant,
+        };
+        if (editingEdu) {
+          setEducations((prev) => prev.map((item) => item.id === editingEdu.id ? savedEdu : item));
+        } else {
+          setEducations((prev) => [savedEdu, ...prev]);
+        }
+      }
     } catch (err) {
       console.error('Cloud save error (education):', err);
     }
@@ -612,8 +641,7 @@ export default function AdminJourneyPage() {
 
   const handleDeleteEdu = async (id: number | string) => {
     if (confirm(t.confirmDeleteEdu)) {
-      const updated = educations.filter((item) => item.id !== id);
-      setEducations(updated);
+      setEducations((prev) => prev.filter((item) => item.id !== id));
 
       try {
         await fetch(`/api/education?id=${encodeURIComponent(id)}`, {

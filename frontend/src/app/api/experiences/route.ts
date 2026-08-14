@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export interface ExperienceItem {
-  id: number | string;
+  id?: number | string;
   role_fr: string;
   role_en: string;
   company: string;
@@ -79,29 +79,41 @@ export async function POST(req: NextRequest) {
         updated_at: new Date().toISOString(),
       };
 
-      if (item.id && !isNaN(Number(item.id)) && Number(item.id) < 1000000000000) {
-        const { data, error } = await supabase
-          .from('experiences')
-          .upsert({ id: Number(item.id), ...payload })
-          .select();
+      if (item.id && !isNaN(Number(item.id))) {
+        const check = await supabase.from('experiences').select('id').eq('id', Number(item.id)).single();
+        if (check.data?.id) {
+          const { data, error } = await supabase
+            .from('experiences')
+            .update(payload)
+            .eq('id', Number(item.id))
+            .select();
 
-        if (error) {
-          console.error('Supabase upsert experience error:', error);
-          return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+          if (error) {
+            console.error('Supabase update experience error:', error);
+            return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+          }
+          return NextResponse.json({ success: true, message: 'Expérience mise à jour !', data: data?.[0] });
         }
-        return NextResponse.json({ success: true, message: 'Expérience mise à jour !', data: data?.[0] });
-      } else {
-        const { data, error } = await supabase
-          .from('experiences')
-          .insert([payload])
-          .select();
-
-        if (error) {
-          console.error('Supabase insert experience error:', error);
-          return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-        }
-        return NextResponse.json({ success: true, message: 'Expérience ajoutée !', data: data?.[0] });
       }
+
+      const { data: maxRows } = await supabase
+        .from('experiences')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      const nextId = (maxRows?.[0]?.id || 0) + 1;
+
+      const { data, error } = await supabase
+        .from('experiences')
+        .insert([{ id: nextId, ...payload }])
+        .select();
+
+      if (error) {
+        console.error('Supabase insert experience error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: 'Expérience ajoutée !', data: data?.[0] });
     }
 
     return NextResponse.json({ success: true, message: 'Enregistré avec succès !' });

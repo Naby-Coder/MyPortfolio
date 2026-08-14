@@ -14,6 +14,7 @@ export interface ProjectDetailData {
   timelineEn: string;
   statusFr: string;
   statusEn: string;
+  status?: string;
   tech: string[];
   image: string;
   gallery: string[];

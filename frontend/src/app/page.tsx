@@ -161,7 +161,10 @@ export default function HomePage() {
         const res = await fetch('/api/projects', { cache: 'no-store' });
         const json = await res.json();
         if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
-          setFeaturedProject(json.data[0]);
+          const liveProj = json.data.find((p: any) => p.status !== 'DRAFT' && p.status !== 'PRIVATE');
+          if (liveProj) {
+            setFeaturedProject(liveProj);
+          }
           return;
         }
       } catch (e) {

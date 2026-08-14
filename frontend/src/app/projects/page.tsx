@@ -80,6 +80,10 @@ export default function ProjectsPage() {
   }, []);
 
   const filteredProjects = projectList.filter((project) => {
+    // Only show live projects on public page
+    if (project.status === 'DRAFT' || project.status === 'PRIVATE' || project.status === 'draft' || project.status === 'private') {
+      return false;
+    }
     const title = locale === 'fr' ? project.titleFr : project.titleEn;
     const summary = locale === 'fr' ? project.summaryFr : project.summaryEn;
     const matchesFilter = selectedFilter === 'all' || project.categoryFilter === selectedFilter;
