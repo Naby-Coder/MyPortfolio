@@ -1029,14 +1029,14 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              {/* Right Side: Badge Logo / Image positioned slightly at bottom-right */}
+              {/* Right Side: Badge Logo / Certificate Image */}
               <div className="shrink-0 flex flex-col items-center">
                 {selectedCert.image ? (
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white dark:bg-zinc-900/90 p-2 border border-slate-200/80 dark:border-white/10 shadow-md flex items-center justify-center">
+                  <div className="w-32 h-24 sm:w-40 sm:h-28 rounded-xl bg-white dark:bg-zinc-900/90 p-1.5 border border-slate-200/80 dark:border-white/10 shadow-md flex items-center justify-center overflow-hidden">
                     <img
                       src={selectedCert.image}
                       alt={selectedCert.titleFr || 'Badge'}
-                      className="w-full h-full object-contain rounded-xl"
+                      className="w-full h-full object-contain rounded-lg"
                     />
                   </div>
                 ) : (
@@ -1049,6 +1049,22 @@ export default function AboutPage() {
                 )}
               </div>
             </div>
+
+            {/* Full Attestation Document Preview if available */}
+            {selectedCert.image && selectedCert.image.startsWith('/certificates/') && (
+              <div className="mt-1 pt-3 border-t border-slate-200 dark:border-white/10">
+                <span className="text-slate-500 dark:text-zinc-400 block uppercase text-[10px] mb-2 font-mono">
+                  Document Officiel Vérifié
+                </span>
+                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-inner bg-slate-50 dark:bg-black/40 p-2">
+                  <img
+                    src={selectedCert.image}
+                    alt={selectedCert.titleFr}
+                    className="w-full max-h-64 object-contain mx-auto rounded-lg"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Bottom Actions */}
             <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
