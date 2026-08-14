@@ -1075,22 +1075,6 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Full Attestation Document Preview if available */}
-            {selectedCert.image && selectedCert.image.startsWith('/certificates/') && (
-              <div className="mt-1 pt-3 border-t border-slate-200 dark:border-white/10">
-                <span className="text-slate-500 dark:text-zinc-400 block uppercase text-[10px] mb-2 font-mono">
-                  Document Officiel Vérifié
-                </span>
-                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-inner bg-slate-50 dark:bg-black/40 p-2">
-                  <img
-                    src={selectedCert.image}
-                    alt={selectedCert.titleFr}
-                    className="w-full max-h-64 object-contain mx-auto rounded-lg"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Bottom Actions */}
             <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <Button
