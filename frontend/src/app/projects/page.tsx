@@ -65,39 +65,6 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function loadProjects() {
-      // 1. Immediate local storage check for instant UI update on same browser
-      try {
-        const stored = localStorage.getItem('myfolio_projects');
-        if (stored) {
-          const customProjects = JSON.parse(stored);
-          if (Array.isArray(customProjects) && customProjects.length > 0) {
-            const customMapped: ProjectDetailData[] = customProjects.map((p: any, idx: number) => {
-              const base = projectsData.find((m) => m.slug === p.slug) || projectsData[0];
-              return {
-                ...base,
-                id: p.id || 100 + idx,
-                slug: p.slug || base.slug,
-                titleFr: p.title_fr || p.title || base.titleFr,
-                titleEn: p.title_en || p.title || base.titleEn,
-                category: p.category || base.category,
-                categoryFilter: (p.categoryFilter as any) || base.categoryFilter,
-                summaryFr: p.summary_fr || p.summary || base.summaryFr,
-                summaryEn: p.summary_en || p.summary || base.summaryEn,
-                image: p.featured_image || p.image || base.image,
-                tech: p.technologies || p.tech || base.tech,
-              };
-            });
-            setProjectList([
-              ...customMapped,
-              ...projectsData.filter((m) => !customMapped.some((f) => f.slug === m.slug)),
-            ]);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading local projects:', e);
-      }
-
-      // 2. Fetch fresh cloud data with no cache
       try {
         const res = await fetch('/api/projects', { cache: 'no-store' });
         const json = await res.json();
@@ -110,8 +77,6 @@ export default function ProjectsPage() {
     }
 
     loadProjects();
-    window.addEventListener('myfolio_projects_updated', loadProjects);
-    return () => window.removeEventListener('myfolio_projects_updated', loadProjects);
   }, []);
 
   const filteredProjects = projectList.filter((project) => {

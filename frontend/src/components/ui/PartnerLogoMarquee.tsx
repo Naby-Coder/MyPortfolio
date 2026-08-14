@@ -111,24 +111,11 @@ export function PartnerLogoMarquee() {
 
   useEffect(() => {
     async function loadBadges() {
-      // 1. Instant local preview
-      try {
-        const stored = localStorage.getItem('myfolio_badges');
-        if (stored) {
-          const list = JSON.parse(stored);
-          if (Array.isArray(list) && list.length > 0) setBadges(list);
-        }
-      } catch (e) {
-        console.warn('Local badge check:', e);
-      }
-
-      // 2. Fresh cloud fetch without cache
       try {
         const res = await fetch('/api/certifications', { cache: 'no-store' });
         const json = await res.json();
         if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
           setBadges(json.data);
-          localStorage.setItem('myfolio_badges', JSON.stringify(json.data));
           return;
         }
       } catch (err) {

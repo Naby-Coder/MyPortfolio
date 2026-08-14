@@ -469,7 +469,7 @@ function ProjectEditorInner() {
     }
   };
 
-  const handleSave = (targetStatus: 'LIVE' | 'DRAFT' | 'PRIVATE') => {
+  const handleSave = async (targetStatus: 'LIVE' | 'DRAFT' | 'PRIVATE') => {
     setProjectStatus(targetStatus);
     setSaveStatus(targetStatus === 'LIVE' ? t.publishing : t.savingDraft);
 
@@ -524,25 +524,13 @@ function ProjectEditorInner() {
     };
 
     try {
-      const stored = localStorage.getItem('myfolio_projects');
-      const existingList = stored ? JSON.parse(stored) : [];
-      const updatedList = [projectPayload, ...existingList.filter((p: any) => p.slug !== projectPayload.slug)];
-      localStorage.setItem('myfolio_projects', JSON.stringify(updatedList));
-      window.dispatchEvent(new Event('myfolio_projects_updated'));
-
-      // Real-time Cloud Sync to Supabase
-      fetch('/api/projects', {
+      await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project: projectPayload }),
-      }).catch((err) => console.warn('Projects cloud sync error:', err));
+      });
     } catch (e: any) {
-      console.warn('Storage quota notice, saving to cloud directly:', e);
-      fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project: projectPayload }),
-      }).catch((err) => console.warn('Projects cloud fallback error:', err));
+      console.error('Projects cloud sync error:', e);
     }
 
     setTimeout(() => {

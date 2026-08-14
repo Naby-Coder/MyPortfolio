@@ -167,22 +167,8 @@ export default function HomePage() {
       } catch (e) {
         console.warn('Cloud featured project notice:', e);
       }
-
-      try {
-        const stored = localStorage.getItem('myfolio_projects');
-        if (stored) {
-          const list = JSON.parse(stored);
-          if (Array.isArray(list) && list.length > 0) {
-            setFeaturedProject(list[0]);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading featured project on homepage:', e);
-      }
     }
     loadFeatured();
-    window.addEventListener('myfolio_projects_updated', loadFeatured);
-    return () => window.removeEventListener('myfolio_projects_updated', loadFeatured);
   }, []);
 
   const featuredTitle = featuredProject

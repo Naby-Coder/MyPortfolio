@@ -229,30 +229,23 @@ export default function CvPage() {
   const [customEducations, setCustomEducations] = useState<any[] | null>(null);
 
   useEffect(() => {
-    function loadLiveJourney() {
-      try {
-        const storedExp = localStorage.getItem('myfolio_experiences');
-        if (storedExp) {
-          const parsed = JSON.parse(storedExp);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCustomExperiences(parsed);
-          }
+    fetch('/api/experiences')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCustomExperiences(res.data);
         }
-        const storedEdu = localStorage.getItem('myfolio_educations');
-        if (storedEdu) {
-          const parsed = JSON.parse(storedEdu);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCustomEducations(parsed);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading live journey in CV:', e);
-      }
-    }
+      })
+      .catch((err) => console.error('Error fetching experiences in CV page:', err));
 
-    loadLiveJourney();
-    window.addEventListener('myfolio_journey_updated', loadLiveJourney);
-    return () => window.removeEventListener('myfolio_journey_updated', loadLiveJourney);
+    fetch('/api/education')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCustomEducations(res.data);
+        }
+      })
+      .catch((err) => console.error('Error fetching education in CV page:', err));
   }, []);
 
   const displayedExperiences = customExperiences

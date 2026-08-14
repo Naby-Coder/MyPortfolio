@@ -327,61 +327,35 @@ export default function AdminJourneyPage() {
   const badgeFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    try {
-      const storedExp = localStorage.getItem('myfolio_experiences');
-      if (storedExp) {
-        const parsed: AdminExperience[] = JSON.parse(storedExp);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const updated = parsed.map((item) => {
-            if (item.id === 1) {
-              return {
-                ...defaultExperiences[0],
-                tags: item.tags && item.tags.length > 0 ? item.tags : defaultExperiences[0].tags,
-              };
-            }
-            return item;
-          });
-          setExperiences(updated);
-          localStorage.setItem('myfolio_experiences', JSON.stringify(updated));
-          window.dispatchEvent(new Event('myfolio_journey_updated'));
+    // Load experiences from Supabase API
+    fetch('/api/experiences')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setExperiences(res.data);
         }
-      } else {
-        localStorage.setItem('myfolio_experiences', JSON.stringify(defaultExperiences));
-      }
+      })
+      .catch((err) => console.error('Error loading experiences API:', err));
 
-      const storedEdu = localStorage.getItem('myfolio_educations');
-      if (storedEdu) {
-        const parsed: AdminEducation[] = JSON.parse(storedEdu);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const hasMaster = parsed.some((e) => e.degree_fr.toLowerCase().includes('master'));
-          if (!hasMaster) {
-            const merged = [defaultEducations[0], ...parsed];
-            setEducations(merged);
-            localStorage.setItem('myfolio_educations', JSON.stringify(merged));
-          } else {
-            setEducations(parsed);
-          }
+    // Load education records from Supabase API
+    fetch('/api/education')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setEducations(res.data);
         }
-      } else {
-        localStorage.setItem('myfolio_educations', JSON.stringify(defaultEducations));
-      }
+      })
+      .catch((err) => console.error('Error loading education API:', err));
 
-      // Load badges from live cloud API
-      fetch('/api/certifications')
-        .then((r) => r.json())
-        .then((res) => {
-          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-            setBadges(res.data);
-            localStorage.setItem('myfolio_badges', JSON.stringify(res.data));
-          }
-        })
-        .catch(() => {
-          const storedBadges = localStorage.getItem('myfolio_badges');
-          if (storedBadges) setBadges(JSON.parse(storedBadges));
-        });
-    } catch (e) {
-      console.error('Error loading journey and badges data:', e);
-    }
+    // Load badges from live cloud API
+    fetch('/api/certifications')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setBadges(res.data);
+        }
+      })
+      .catch((err) => console.error('Error loading badges API:', err));
   }, []);
 
   // Badge Handlers
@@ -437,7 +411,7 @@ export default function AdminJourneyPage() {
     }
   };
 
-  const handleSaveBadge = (e: React.FormEvent) => {
+  const handleSaveBadge = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!badgeCode.trim() || !badgeTitleFr.trim() || !badgeIssuer.trim()) return;
 
@@ -462,32 +436,32 @@ export default function AdminJourneyPage() {
     }
 
     setBadges(updated);
-    localStorage.setItem('myfolio_badges', JSON.stringify(updated));
-    window.dispatchEvent(new Event('myfolio_badges_updated'));
 
-    // Real-time Cloud Sync to Supabase
-    fetch('/api/certifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ badges: updated }),
-    }).catch((err) => console.warn('Cloud sync error:', err));
+    try {
+      await fetch('/api/certifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ badges: updated }),
+      });
+    } catch (err) {
+      console.error('Cloud sync error (certifications):', err);
+    }
 
     setIsBadgeModalOpen(false);
   };
 
-  const handleDeleteBadge = (id: string) => {
+  const handleDeleteBadge = async (id: string) => {
     if (confirm(t.confirmDeleteBadge)) {
       const updated = badges.filter((b) => b.id !== id);
       setBadges(updated);
-      localStorage.setItem('myfolio_badges', JSON.stringify(updated));
-      window.dispatchEvent(new Event('myfolio_badges_updated'));
 
-      // Real-time Cloud Sync to Supabase
-      fetch('/api/certifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ badges: updated }),
-      }).catch((err) => console.warn('Cloud sync error:', err));
+      try {
+        await fetch(`/api/certifications?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.error('Delete error (certifications):', err);
+      }
     }
   };
 
@@ -518,7 +492,7 @@ export default function AdminJourneyPage() {
     setIsExpModalOpen(true);
   };
 
-  const handleSaveExp = (e: React.FormEvent) => {
+  const handleSaveExp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expRoleFr.trim() || !expCompany.trim()) return;
 
@@ -542,17 +516,32 @@ export default function AdminJourneyPage() {
     }
 
     setExperiences(updated);
-    localStorage.setItem('myfolio_experiences', JSON.stringify(updated));
-    window.dispatchEvent(new Event('myfolio_journey_updated'));
+
+    try {
+      await fetch('/api/experiences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('Cloud save error (experiences):', err);
+    }
+
     setIsExpModalOpen(false);
   };
 
-  const handleDeleteExp = (id: number | string) => {
+  const handleDeleteExp = async (id: number | string) => {
     if (confirm(t.confirmDeleteExp)) {
       const updated = experiences.filter((item) => item.id !== id);
       setExperiences(updated);
-      localStorage.setItem('myfolio_experiences', JSON.stringify(updated));
-      window.dispatchEvent(new Event('myfolio_journey_updated'));
+
+      try {
+        await fetch(`/api/experiences?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.error('Delete error (experiences):', err);
+      }
     }
   };
 
@@ -583,7 +572,7 @@ export default function AdminJourneyPage() {
     setIsEduModalOpen(true);
   };
 
-  const handleSaveEdu = (e: React.FormEvent) => {
+  const handleSaveEdu = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eduDegreeFr.trim() || !eduSchool.trim()) return;
 
@@ -607,17 +596,32 @@ export default function AdminJourneyPage() {
     }
 
     setEducations(updated);
-    localStorage.setItem('myfolio_educations', JSON.stringify(updated));
-    window.dispatchEvent(new Event('myfolio_journey_updated'));
+
+    try {
+      await fetch('/api/education', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('Cloud save error (education):', err);
+    }
+
     setIsEduModalOpen(false);
   };
 
-  const handleDeleteEdu = (id: number | string) => {
+  const handleDeleteEdu = async (id: number | string) => {
     if (confirm(t.confirmDeleteEdu)) {
       const updated = educations.filter((item) => item.id !== id);
       setEducations(updated);
-      localStorage.setItem('myfolio_educations', JSON.stringify(updated));
-      window.dispatchEvent(new Event('myfolio_journey_updated'));
+
+      try {
+        await fetch(`/api/education?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.error('Delete error (education):', err);
+      }
     }
   };
 

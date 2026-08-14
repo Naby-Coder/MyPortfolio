@@ -184,30 +184,15 @@ export default function AdminSkillsPage() {
   useEffect(() => {
     async function loadSkills() {
       try {
-        const stored = localStorage.getItem('myfolio_skills');
-        if (stored) {
-          const list: SupabaseSkill[] = JSON.parse(stored);
-          if (Array.isArray(list)) {
-            const hasSystems = list.some((item) => item.category === 'Systems, Networks & Security');
-            if (!hasSystems) {
-              const systemsSkills = fallbackSkills.filter((s) => s.category === 'Systems, Networks & Security');
-              const merged = [...list, ...systemsSkills];
-              setTechList(merged);
-              localStorage.setItem('myfolio_skills', JSON.stringify(merged));
-              window.dispatchEvent(new Event('myfolio_skills_updated'));
-            } else {
-              setTechList(list);
-            }
-          }
+        const res = await fetch('/api/skills');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setTechList(json.data);
         } else {
-          localStorage.setItem('myfolio_skills', JSON.stringify(fallbackSkills));
-          setTechList(fallbackSkills);
-        }
-
-        const data = await fetchSupabaseSkills();
-        if (data && data.length > 0) {
-          setTechList(data);
-          localStorage.setItem('myfolio_skills', JSON.stringify(data));
+          const data = await fetchSupabaseSkills();
+          if (data && data.length > 0) {
+            setTechList(data);
+          }
         }
       } catch (e) {
         console.error('Error loading skills:', e);
@@ -257,7 +242,7 @@ export default function AdminSkillsPage() {
       try {
         await updateSupabaseSkill(editingItem.id, payload);
       } catch (err) {
-        console.warn('Supabase offline/local update fallback:', err);
+        console.warn('Supabase update warning:', err);
       }
     } else {
       const newItem: SupabaseSkill = {
@@ -270,14 +255,24 @@ export default function AdminSkillsPage() {
           newItem.id = created[0].id;
         }
       } catch (err) {
-        console.warn('Supabase offline/local create fallback:', err);
+        console.warn('Supabase create warning:', err);
       }
       updatedList = [newItem, ...techList];
     }
 
     setTechList(updatedList);
-    localStorage.setItem('myfolio_skills', JSON.stringify(updatedList));
-    window.dispatchEvent(new Event('myfolio_skills_updated'));
+
+    // Save to API
+    try {
+      await fetch('/api/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('Error saving skill via API:', err);
+    }
+
     setIsModalOpen(false);
   };
 
@@ -285,13 +280,12 @@ export default function AdminSkillsPage() {
     if (confirm(t.confirmDelete)) {
       const updated = techList.filter((item) => String(item.id) !== String(id));
       setTechList(updated);
-      localStorage.setItem('myfolio_skills', JSON.stringify(updated));
-      window.dispatchEvent(new Event('myfolio_skills_updated'));
 
       try {
         await deleteSupabaseSkill(id);
+        await fetch(`/api/skills?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       } catch (err) {
-        console.warn('Supabase offline/local delete fallback:', err);
+        console.warn('Supabase delete warning:', err);
       }
     }
   };

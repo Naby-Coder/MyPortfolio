@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         order: idx + 1,
       }));
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('certifications')
         .upsert(rows, { onConflict: 'id' });
 
@@ -67,5 +67,26 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error updating certifications API:', error);
     return NextResponse.json({ success: false, message: 'Erreur lors de la mise à jour.' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (id && isSupabaseConfigured()) {
+      const { error } = await supabase
+        .from('certifications')
+        .delete()
+        .eq('id', isNaN(Number(id)) ? id : Number(id));
+
+      if (error) console.warn('Supabase delete certification error:', error);
+    }
+
+    return NextResponse.json({ success: true, message: 'Certification supprimée avec succès !' });
+  } catch (error) {
+    console.error('Error in DELETE /api/certifications:', error);
+    return NextResponse.json({ success: false, message: 'Erreur lors de la suppression' }, { status: 500 });
   }
 }

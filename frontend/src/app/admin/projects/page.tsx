@@ -123,34 +123,9 @@ export default function ProjectManagerPage() {
       } catch (err) {
         console.warn('Could not fetch cloud projects:', err);
       }
-
-      // 2. Fallback to localStorage
-      try {
-        const stored = localStorage.getItem('myfolio_projects');
-        if (stored) {
-          const list = JSON.parse(stored);
-          if (Array.isArray(list) && list.length > 0) {
-            const formatted = list.map((p: any, idx: number) => ({
-              id: p.id || `NX-${4029 + idx}`,
-              slug: p.slug,
-              title: locale === 'fr' ? (p.title_fr || p.title) : (p.title_en || p.title || p.title_fr),
-              titleEn: p.title_en || p.title || '',
-              category: p.category || 'Web / SaaS',
-              status: p.status || 'LIVE',
-              updated: p.updated || new Date().toISOString().split('T')[0],
-              image: p.featured_image || p.image || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80',
-            }));
-            setAdminProjects(formatted);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading admin projects:', e);
-      }
     }
 
     loadAdminProjects();
-    window.addEventListener('myfolio_projects_updated', loadAdminProjects);
-    return () => window.removeEventListener('myfolio_projects_updated', loadAdminProjects);
   }, [locale]);
 
   const handleDelete = async (targetId: string | number, targetSlug?: string) => {
@@ -161,19 +136,7 @@ export default function ProjectManagerPage() {
     // 1. Immediately remove from local state
     setAdminProjects((prev) => prev.filter((p) => p.id !== targetId && p.slug !== targetSlug));
 
-    // 2. Remove from localStorage
-    try {
-      const stored = localStorage.getItem('myfolio_projects');
-      if (stored) {
-        const list = JSON.parse(stored);
-        const filtered = list.filter((p: any) => p.id !== targetId && p.slug !== targetSlug);
-        localStorage.setItem('myfolio_projects', JSON.stringify(filtered));
-      }
-    } catch (e) {
-      console.error('Error deleting project from storage:', e);
-    }
-
-    // 3. Delete from Supabase Cloud
+    // 2. Delete from Supabase Cloud
     try {
       const params = new URLSearchParams();
       if (targetSlug) params.set('slug', targetSlug);

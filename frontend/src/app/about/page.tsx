@@ -465,104 +465,47 @@ export default function AboutPage() {
     setEducations(locale === 'fr' ? educationsFr : educationsEn);
 
     function loadCustomJourney() {
-      try {
-        const storedExp = localStorage.getItem('myfolio_experiences');
-        if (storedExp) {
-          const parsed = JSON.parse(storedExp);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const updated = parsed.map((item: any) => {
-              if (item.id === 1) {
-                return {
-                  ...item,
-                  role_fr: 'Développeur Web & Mobile · Designer Graphique (Freelance)',
-                  role_en: 'Web & Mobile Developer · Graphic Designer (Freelance)',
-                  role: locale === 'fr'
-                    ? 'Développeur Web & Mobile · Designer Graphique (Freelance)'
-                    : 'Web & Mobile Developer · Graphic Designer (Freelance)',
-                  bullets_fr: [
-                    'Conception et développement sur-mesure de sites web et applications web & mobiles réactives (Next.js, React, WordPress, Laravel, MySQL, Flutter...).',
-                    'Création complète d’identités visuelles percutantes : logos, chartes graphiques, maquettes et prototypes interactifs UI/UX (Figma, Photoshop, Illustrator).',
-                    'Administration technique complète du site de l’entreprise et des sites clients : gestion des hébergements, noms de domaine, sauvegardes et déploiements continus (CI/CD, Vercel, Cloud).',
-                    'Gestion et support informatique : installation et optimisation de systèmes d’exploitation (Windows, Linux), montage de PC et maintenance technique.',
-                    'Collaboration étroite et conseil technique auprès des clients pour concevoir des solutions numériques clé-en-main.',
-                  ],
-                  bullets_en: [
-                    'Custom engineering and development of responsive websites and web/mobile apps (Next.js, React, WordPress, Laravel, MySQL, Flutter...).',
-                    'End-to-end visual identity and branding design: logos, brand guidelines, and interactive UI/UX prototypes (Figma, Photoshop, Illustrator).',
-                    'Complete technical administration of company and client websites: managing hosting servers, domain configurations, automated backups, and continuous deployments (CI/CD, Vercel, Cloud).',
-                    'IT infrastructure and systems support: OS setup (Windows, Linux), PC hardware assembly, and maintenance.',
-                    'Close client collaboration and technical consulting to deliver turnkey digital transformation solutions.',
-                  ],
-                  company: 'Kossy Tech Solutions · En télétravail / Remote',
-                };
-              }
-              return item;
-            });
-            setExperiences(updated);
-            localStorage.setItem('myfolio_experiences', JSON.stringify(updated));
+      fetch('/api/experiences')
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+            setExperiences(res.data);
           }
-        }
-        const storedEdu = localStorage.getItem('myfolio_educations');
-        if (storedEdu) {
-          const parsed = JSON.parse(storedEdu);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const hasMaster = parsed.some((e: any) =>
-              (e.degree_fr || e.degree || '').toLowerCase().includes('master')
-            );
-            if (!hasMaster) {
-              const currentDefault = locale === 'fr' ? educationsFr : educationsEn;
-              const merged = [currentDefault[0], ...parsed];
-              setEducations(merged);
-              localStorage.setItem('myfolio_educations', JSON.stringify(merged));
-            } else {
-              setEducations(parsed);
-            }
+        })
+        .catch((err) => console.error('Error fetching experiences in About page:', err));
+
+      fetch('/api/education')
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+            setEducations(res.data);
           }
-        }
-        // Load certifications from live cloud API
-        fetch('/api/certifications')
-          .then((r) => r.json())
-          .then((res) => {
-            if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-              setCertificationsList(res.data);
-              localStorage.setItem('myfolio_badges', JSON.stringify(res.data));
-            }
-          })
-          .catch(() => {
-            const storedBadges = localStorage.getItem('myfolio_badges');
-            if (storedBadges) {
-              const parsedBadges = JSON.parse(storedBadges);
-              if (Array.isArray(parsedBadges) && parsedBadges.length > 0) {
-                setCertificationsList(parsedBadges);
-              }
-            }
-          });
-      } catch (err) {
-        console.error('Error loading custom journey and badges:', err);
-      }
+        })
+        .catch((err) => console.error('Error fetching education in About page:', err));
+
+      fetch('/api/certifications')
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+            setCertificationsList(res.data);
+          }
+        })
+        .catch((err) => console.error('Error fetching certifications in About page:', err));
     }
 
     loadCustomJourney();
-    window.addEventListener('myfolio_journey_updated', loadCustomJourney);
-    window.addEventListener('myfolio_badges_updated', loadCustomJourney);
 
     async function loadSkills() {
       try {
         let skills: SupabaseSkill[] = [];
-        const stored = localStorage.getItem('myfolio_skills');
-        if (stored) {
-          skills = JSON.parse(stored);
-          const hasSystems = Array.isArray(skills) && skills.some((item) => item.category === 'Systems, Networks & Security');
-          if (!hasSystems) {
-            const systemsSkills = fallbackSkills.filter((s) => s.category === 'Systems, Networks & Security');
-            skills = [...(Array.isArray(skills) ? skills : []), ...systemsSkills];
-            localStorage.setItem('myfolio_skills', JSON.stringify(skills));
-          }
+        const res = await fetch('/api/skills');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          skills = json.data;
         } else {
           skills = await fetchSupabaseSkills();
           if (!skills || skills.length === 0) {
             skills = fallbackSkills;
-            localStorage.setItem('myfolio_skills', JSON.stringify(fallbackSkills));
           }
         }
 
