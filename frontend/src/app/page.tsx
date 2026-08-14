@@ -25,7 +25,7 @@ import {
 const content = {
   fr: {
     hero: {
-      badge: 'DÉVELOPPEUR FULL-STACK · DESIGNER · GRAPHIC DESIGNER',
+      badge: 'DÉVELOPPEUR FULL-STACK · DESIGNER GRAPHIQUE · SÉCURITÉ SYSTÈMES & RÉSEAUX',
       titleLine1: 'Concevoir des expériences numériques &',
       titleLine2: 'des systèmes fiables.',
       subtitle: 'Je combine le développement Full-Stack (Next.js, React, Angular, Laravel, Spring Boot, CMS), le design d’interface UI/UX & graphique (Figma, Photoshop, Illustrator) et le développement mobile (Flutter, React Native, Android).',
@@ -86,7 +86,7 @@ const content = {
   },
   en: {
     hero: {
-      badge: 'FULL-STACK DEVELOPER · DESIGNER · GRAPHIC DESIGNER',
+      badge: 'FULL-STACK DEVELOPER · GRAPHIC DESIGNER · SYSTEMS & NETWORK SECURITY',
       titleLine1: 'Building digital experiences &',
       titleLine2: 'reliable systems.',
       subtitle: 'I combine Full-Stack development (Next.js, React, Angular, Laravel, Spring Boot, CMS), UI/UX & Graphic design (Figma, Photoshop, Illustrator), and mobile app engineering (Flutter, React Native, Android).',
