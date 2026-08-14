@@ -544,18 +544,18 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Sticky Section Bar */}
-      <div className="sticky top-20 z-30 py-3 mb-12 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-y border-slate-200 dark:border-white/10 flex items-center gap-6 overflow-x-auto text-xs font-mono">
-        <span className="text-blue-600 dark:text-blue-400 font-bold">{t.jump}</span>
-        <a href="#challenge" className="text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+      <div className="sticky top-16 md:top-20 z-30 py-3 px-4 -mx-4 sm:mx-0 sm:px-4 sm:rounded-xl mb-12 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-md flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-xs font-mono scrollbar-none">
+        <span className="text-blue-600 dark:text-blue-400 font-bold shrink-0">{t.jump}</span>
+        <a href="#challenge" className="text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0">
           {t.jumpItems[0]}
         </a>
-        <a href="#solution" className="text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+        <a href="#solution" className="text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0">
           {t.jumpItems[1]}
         </a>
-        <a href="#architecture" className="text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+        <a href="#architecture" className="text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0">
           {t.jumpItems[2]}
         </a>
-        <a href="#results" className="text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+        <a href="#results" className="text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0">
           {t.jumpItems[3]}
         </a>
       </div>
