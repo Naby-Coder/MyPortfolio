@@ -292,49 +292,52 @@ function ProjectEditorInner() {
     }
 
     const targetSlug = querySlug;
-    try {
-      const stored = localStorage.getItem('myfolio_projects');
-      let foundInStorage = null;
-      if (stored) {
-        const list = JSON.parse(stored);
-        if (Array.isArray(list)) {
-          foundInStorage = list.find((p: any) => p.slug === targetSlug);
+    async function loadProjectData() {
+      try {
+        let foundInCloud: any = null;
+        try {
+          const res = await fetch('/api/projects', { cache: 'no-store' });
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.data)) {
+            foundInCloud = json.data.find((p: any) => p.slug === targetSlug);
+          }
+        } catch (err) {
+          console.warn('Could not fetch project from API:', err);
         }
-      }
 
-      const baseProject = projectsData.find((p) => p.slug === targetSlug);
+        const baseProject = projectsData.find((p) => p.slug === targetSlug);
 
-      if (!foundInStorage && !baseProject) {
-        return;
-      }
+        if (!foundInCloud && !baseProject) {
+          return;
+        }
 
-      const current = foundInStorage || (baseProject ? {
-        slug: baseProject.slug,
-        title_fr: baseProject.titleFr,
-        title_en: baseProject.titleEn,
-        summary_fr: baseProject.summaryFr,
-        summary_en: baseProject.summaryEn,
-        problem_fr: baseProject.challenge.p1Fr,
-        problem_en: baseProject.challenge.p1En,
-        solution_fr: baseProject.solution.overviewFr || baseProject.solution.cards[0]?.descFr || '',
-        solution_en: baseProject.solution.overviewEn || baseProject.solution.cards[0]?.descEn || '',
-        role_fr: baseProject.roleFr,
-        role_en: baseProject.roleEn,
-        features_fr: baseProject.solution.cards.map((c) => c.titleFr),
-        features_en: baseProject.solution.cards.map((c) => c.titleEn),
-        architecture_client_title: baseProject.architecture?.client?.title || 'Next.js 15 App Router',
-        architecture_client_sub: baseProject.architecture?.client?.sub || 'TypeScript · Tailwind CSS',
-        architecture_backend_title: baseProject.architecture?.backend?.title || 'Laravel REST API',
-        architecture_backend_sub: baseProject.architecture?.backend?.sub || 'Eloquent · Sanctum Auth · Redis Cache',
-        architecture_database_title: baseProject.architecture?.database?.title || 'Supabase PostgreSQL',
-        architecture_database_sub: baseProject.architecture?.database?.sub || 'Cloud PostgreSQL · RLS Security',
-        technologies: baseProject.tech,
-        demo_url: baseProject.demoUrl,
-        github_url: baseProject.githubUrl,
-        featured_image: baseProject.image,
-        gallery: baseProject.gallery,
-        status: 'LIVE',
-      } : null);
+        const current = foundInCloud || (baseProject ? {
+          slug: baseProject.slug,
+          title_fr: baseProject.titleFr,
+          title_en: baseProject.titleEn,
+          summary_fr: baseProject.summaryFr,
+          summary_en: baseProject.summaryEn,
+          problem_fr: baseProject.challenge.p1Fr,
+          problem_en: baseProject.challenge.p1En,
+          solution_fr: baseProject.solution.overviewFr || baseProject.solution.cards[0]?.descFr || '',
+          solution_en: baseProject.solution.overviewEn || baseProject.solution.cards[0]?.descEn || '',
+          role_fr: baseProject.roleFr,
+          role_en: baseProject.roleEn,
+          features_fr: baseProject.solution.cards.map((c) => c.titleFr),
+          features_en: baseProject.solution.cards.map((c) => c.titleEn),
+          architecture_client_title: baseProject.architecture?.client?.title || 'Next.js 15 App Router',
+          architecture_client_sub: baseProject.architecture?.client?.sub || 'TypeScript · Tailwind CSS',
+          architecture_backend_title: baseProject.architecture?.backend?.title || 'Laravel REST API',
+          architecture_backend_sub: baseProject.architecture?.backend?.sub || 'Eloquent · Sanctum Auth · Redis Cache',
+          architecture_database_title: baseProject.architecture?.database?.title || 'Supabase PostgreSQL',
+          architecture_database_sub: baseProject.architecture?.database?.sub || 'Cloud PostgreSQL · RLS Security',
+          technologies: baseProject.tech,
+          demo_url: baseProject.demoUrl,
+          github_url: baseProject.githubUrl,
+          featured_image: baseProject.image,
+          gallery: baseProject.gallery,
+          status: 'LIVE',
+        } : null);
 
       if (current) {
         setSlug(current.slug || targetSlug);
@@ -453,7 +456,10 @@ function ProjectEditorInner() {
     } catch (e) {
       console.error('Error loading project into editor:', e);
     }
-  }, [querySlug]);
+  }
+
+  loadProjectData();
+}, [querySlug]);
 
   const handleTitleFrChange = (val: string) => {
     setTitleFr(val);

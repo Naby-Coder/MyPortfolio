@@ -98,15 +98,15 @@ export default function ProjectManagerPage() {
 
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [adminProjects, setAdminProjects] = useState(mockAdminProjects);
+  const [adminProjects, setAdminProjects] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     async function loadAdminProjects() {
-      // 1. Load from Cloud API first
       try {
         const res = await fetch('/api/projects', { cache: 'no-store' });
         const json = await res.json();
-        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json?.success && Array.isArray(json.data)) {
           const mapped = json.data.map((p: any, idx: number) => ({
             id: p.id || `NX-${4029 + idx}`,
             slug: p.slug,
@@ -118,10 +118,11 @@ export default function ProjectManagerPage() {
             image: p.image || p.featured_image || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80',
           }));
           setAdminProjects(mapped);
-          return;
         }
       } catch (err) {
         console.warn('Could not fetch cloud projects:', err);
+      } finally {
+        setIsLoading(false);
       }
     }
 
