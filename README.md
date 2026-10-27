@@ -124,9 +124,6 @@ MyFolio/
 ## 9. Variables d'environnement (`frontend/.env.local`)
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre-cle-anon-supabase
-```
 
 ---
 
