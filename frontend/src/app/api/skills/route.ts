@@ -22,15 +22,22 @@ export async function GET() {
         .select('*')
         .order('id', { ascending: true });
 
-      if (!error && data !== null) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         return NextResponse.json({ success: true, data });
       }
     }
 
-    return NextResponse.json({ success: true, data: [] });
+    // Fallback local hors-ligne permanent
+    const { fallbackSkills } = await import('@/data/portfolioData');
+    return NextResponse.json({ success: true, data: fallbackSkills });
   } catch (error) {
     console.error('Error in GET /api/skills:', error);
-    return NextResponse.json({ success: false, data: [] });
+    try {
+      const { fallbackSkills } = await import('@/data/portfolioData');
+      return NextResponse.json({ success: true, data: fallbackSkills });
+    } catch {
+      return NextResponse.json({ success: false, data: [] });
+    }
   }
 }
 

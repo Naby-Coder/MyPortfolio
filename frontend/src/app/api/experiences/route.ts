@@ -50,14 +50,23 @@ export async function GET() {
           tags: Array.isArray(row.technologies) ? row.technologies : [],
         }));
 
-        return NextResponse.json({ success: true, data: mapped });
+        if (mapped.length > 0) {
+          return NextResponse.json({ success: true, data: mapped });
+        }
       }
     }
 
-    return NextResponse.json({ success: true, data: [] });
+    // Fallback local hors-ligne permanent
+    const { fallbackExperiences } = await import('@/data/portfolioData');
+    return NextResponse.json({ success: true, data: fallbackExperiences });
   } catch (error) {
     console.error('Error in GET /api/experiences:', error);
-    return NextResponse.json({ success: false, data: [] });
+    try {
+      const { fallbackExperiences } = await import('@/data/portfolioData');
+      return NextResponse.json({ success: true, data: fallbackExperiences });
+    } catch {
+      return NextResponse.json({ success: false, data: [] });
+    }
   }
 }
 

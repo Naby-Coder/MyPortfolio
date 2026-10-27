@@ -6,6 +6,7 @@ import { ShieldCheck, Award, Sparkles, ExternalLink, Eye, X, CheckCircle2 } from
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { toLocalImage } from '@/lib/localImages';
 
 export interface CertificationBadge {
   id: string | number;
@@ -41,7 +42,7 @@ export const defaultCertificationBadges: CertificationBadge[] = [
     issuer: 'FORCE-N · UNCHK · Mastercard Foundation',
     date: 'Janvier 2024',
     category: 'Web',
-    image: 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786740456795-x3diqhf.png',
+    image: '/certificates/cert-frontend-dev.png',
     credentialUrl: 'https://formation.force-n.sn/mod/customcert/verify_certificate.php?contextid=248505&code=Vaa37EoD0S&qrcode=1',
     colorVariant: 'emerald',
   },
@@ -53,7 +54,7 @@ export const defaultCertificationBadges: CertificationBadge[] = [
     issuer: 'FORCE-N · UNCHK · Mastercard Foundation',
     date: 'Juin 2023',
     category: 'Marketing Digital',
-    image: 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786740612322-j4lvlz0.png',
+    image: '/certificates/cert-marketing-digital.png',
     credentialUrl: 'https://formation.force-n.sn/mod/customcert/verify_certificate.php?contextid=94296&code=6VNev42uge&qrcode=1',
     colorVariant: 'amber',
   },
@@ -89,7 +90,7 @@ export const defaultCertificationBadges: CertificationBadge[] = [
     issuer: 'Cisco Networking Academy',
     date: 'Janvier 2024',
     category: 'Réseaux & Protocoles',
-    image: 'https://qjnsmdtnututsdrvbmei.supabase.co/storage/v1/object/public/portfolio_media/1786740272736-4mha2kp.png',
+    image: '/certificates/cert-ccna1.png',
     credentialUrl: 'https://www.netacad.com/',
     colorVariant: 'blue',
   },
@@ -114,7 +115,7 @@ export function PartnerLogoMarquee() {
             issuer: c.issuer || '',
             date: c.date || c.issue_date || '',
             category: c.category || 'Accréditation',
-            image: c.image || c.badge_image || '/certificates/cert-analyste-cybersecurite.png',
+            image: toLocalImage(c.image || c.badge_image, '/certificates/cert-analyste-cybersecurite.png'),
             credentialUrl: c.credentialUrl || c.credential_url || 'https://unchk.edu.sn/',
             colorVariant: c.colorVariant || 'blue',
           }));

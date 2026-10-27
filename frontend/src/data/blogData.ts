@@ -40,7 +40,7 @@ export const blogArticles: BlogArticleData[] = [
     dateFr: '12 août 2026',
     dateEn: 'August 12, 2026',
     readingTime: 8,
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
+    image: '/blog/blog-nextjs-laravel.jpg',
     tocFr: [
       '01. Introduction & Vision Architecturale',
       '02. Pourquoi un Découplage Total Frontend / Backend ?',
@@ -117,7 +117,7 @@ export async function getFeaturedProjects(): Promise<Project[]> {
     dateFr: '10 août 2026',
     dateEn: 'August 10, 2026',
     readingTime: 10,
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80',
+    image: '/blog/blog-network-security.jpg',
     tocFr: [
       '01. Principe du Zero Trust en Environnement Moderne',
       '02. Segmentation Réseau : VLANs & Règles de Pare-feu',
@@ -195,7 +195,7 @@ sudo ufw enable`,
     dateFr: '06 août 2026',
     dateEn: 'August 06, 2026',
     readingTime: 7,
-    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80',
+    image: '/blog/blog-flutter-supabase.jpg',
     tocFr: [
       '01. Pourquoi le duo Flutter & Supabase ?',
       '02. Architecture en Couches (BLoC / Riverpod)',
@@ -260,7 +260,7 @@ final orderUpdatesProvider = StreamProvider.autoDispose<List<Order>>((ref) {
     dateFr: '02 août 2026',
     dateEn: 'August 02, 2026',
     readingTime: 6,
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+    image: '/blog/blog-figma-design-system.jpg',
     tocFr: [
       '01. L’Importance des Design Tokens',
       '02. Organisation Atomique dans Figma',
@@ -313,7 +313,7 @@ final orderUpdatesProvider = StreamProvider.autoDispose<List<Order>>((ref) {
     dateFr: '28 juillet 2026',
     dateEn: 'July 28, 2026',
     readingTime: 9,
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
+    image: '/blog/blog-headless-wordpress.jpg',
     tocFr: [
       '01. Pourquoi le Headless WordPress ?',
       '02. GraphQL vs REST API pour la Récupération de Contenu',

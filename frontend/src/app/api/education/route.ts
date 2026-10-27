@@ -50,14 +50,23 @@ export async function GET() {
           };
         });
 
-        return NextResponse.json({ success: true, data: mapped });
+        if (mapped.length > 0) {
+          return NextResponse.json({ success: true, data: mapped });
+        }
       }
     }
 
-    return NextResponse.json({ success: true, data: [] });
+    // Fallback local hors-ligne permanent
+    const { fallbackEducation } = await import('@/data/portfolioData');
+    return NextResponse.json({ success: true, data: fallbackEducation });
   } catch (error) {
     console.error('Error in GET /api/education:', error);
-    return NextResponse.json({ success: false, data: [] });
+    try {
+      const { fallbackEducation } = await import('@/data/portfolioData');
+      return NextResponse.json({ success: true, data: fallbackEducation });
+    } catch {
+      return NextResponse.json({ success: false, data: [] });
+    }
   }
 }
 

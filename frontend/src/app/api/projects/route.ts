@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { projectsData, ProjectDetailData } from '@/data/projectsData';
+import { toLocalImage } from '@/lib/localImages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -16,9 +17,15 @@ export async function GET() {
       if (!error && data !== null) {
         const mapped: ProjectDetailData[] = data.map((p: any, idx: number) => {
           const base = projectsData.find((m) => m.slug === p.slug);
-          const gallery = Array.isArray(p.features_fr) && p.features_fr.length > 0
-            ? p.features_fr
-            : (base?.gallery || (p.featured_image ? [p.featured_image] : []));
+          // Images are bundled locally in /public: rewrite Supabase Storage URLs
+          // so images keep working even if the Supabase account expires.
+          const dbGallery: string[] = Array.isArray(p.features_fr)
+            ? p.features_fr.map((u: unknown) => toLocalImage(u)).filter(Boolean)
+            : [];
+          const dbImage: string = toLocalImage(p.featured_image);
+          const gallery = dbGallery.length > 0
+            ? dbGallery
+            : (base?.gallery || (dbImage ? [dbImage] : []));
 
           const techList: string[] = Array.isArray(p.technologies)
             ? p.technologies
@@ -46,7 +53,7 @@ export async function GET() {
             is_featured: Boolean(p.is_featured),
             isFeatured: Boolean(p.is_featured),
             tech: techList,
-            image: p.featured_image || base?.image || (gallery[0] || ''),
+            image: dbImage || base?.image || (gallery[0] || ''),
             gallery: gallery,
             demoUrl: p.demo_url || base?.demoUrl || '',
             githubUrl: p.github_url || base?.githubUrl || '',

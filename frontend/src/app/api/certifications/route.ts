@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { CertificationBadge } from '@/components/ui/PartnerLogoMarquee';
+import { CertificationBadge, defaultCertificationBadges } from '@/components/ui/PartnerLogoMarquee';
+import { toLocalImage } from '@/lib/localImages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,7 +14,7 @@ export async function GET() {
         .select('*')
         .order('order', { ascending: true });
 
-      if (!error && data !== null) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         const mapped: CertificationBadge[] = data.map((d: any) => ({
           id: String(d.id),
           badgeCode: d.title ? d.title.substring(0, 16).toUpperCase() : 'OFFICIAL',
@@ -22,7 +23,7 @@ export async function GET() {
           issuer: d.issuer || '',
           date: d.issue_date || '2024',
           category: d.category || 'Certification',
-          image: d.badge_image || undefined,
+          image: toLocalImage(d.badge_image, undefined),
           credentialUrl: d.credential_url || 'https://unchk.edu.sn/',
           colorVariant: 'blue',
         }));
@@ -30,10 +31,10 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ success: true, data: [] });
+    return NextResponse.json({ success: true, data: defaultCertificationBadges });
   } catch (error) {
     console.error('Error fetching certifications API:', error);
-    return NextResponse.json({ success: false, data: [] });
+    return NextResponse.json({ success: true, data: defaultCertificationBadges });
   }
 }
 

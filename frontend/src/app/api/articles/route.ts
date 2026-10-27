@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { blogArticles } from '@/data/blogData';
+import { toLocalImage } from '@/lib/localImages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const DEFAULT_COVER = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80';
+const DEFAULT_COVER = '/blog/blog-nextjs-laravel.jpg';
 
 function inferCategory(article: any) {
   const staticFound = blogArticles.find((b) => b.slug === article.slug);
@@ -57,8 +58,15 @@ export async function GET(req: NextRequest) {
       if (!error && data !== null && data.length > 0) {
         const mapped = data.map((a: any) => {
           const cats = inferCategory(a);
+          const staticFound = blogArticles.find((b) => b.slug === a.slug);
+          // Si l'image est sur Supabase ou Unsplash, utiliser la version locale permanente
+          let finalCover = toLocalImage(a.cover_image, staticFound?.image || DEFAULT_COVER);
+          if (finalCover && finalCover.includes('unsplash.com') && staticFound?.image) {
+            finalCover = staticFound.image;
+          }
           return {
             ...a,
+            cover_image: finalCover || DEFAULT_COVER,
             category_fr: cats.fr,
             category_en: cats.en,
             category: cats.fr,
@@ -118,7 +126,7 @@ export async function POST(req: NextRequest) {
     const rawSlug = article.slug || (article.title_fr || article.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `article-${Date.now()}`;
     const finalSlug = rawSlug.substring(0, 240);
 
-    let coverImage = article.cover_image || article.image || DEFAULT_COVER;
+    let coverImage = toLocalImage(article.cover_image || article.image, DEFAULT_COVER);
     if (coverImage && coverImage.length > 490) {
       coverImage = DEFAULT_COVER;
     }
